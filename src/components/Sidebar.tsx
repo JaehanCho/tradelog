@@ -5,6 +5,8 @@ import { triggerUpdateCheck } from "./UpdateNotification";
 
 export function Sidebar() {
   const computed = useTradingDays((s) => s.computed);
+  const monthFilter = useTradingDays((s) => s.monthFilter);
+  const setMonthFilter = useTradingDays((s) => s.setMonthFilter);
   const [version, setVersion] = useState<string>("");
 
   useEffect(() => {
@@ -26,11 +28,23 @@ export function Sidebar() {
       </div>
       <nav className="sidebar-nav">
         <div className="sidebar-section-label">월별</div>
-        {months.length === 0 && <div className="sidebar-empty">데이터 없음</div>}
+        <button
+          className={`sidebar-link ${monthFilter === null ? "active" : ""}`}
+          onClick={() => setMonthFilter(null)}
+        >
+          전체
+        </button>
+        {months.length === 0 && (
+          <div className="sidebar-empty">데이터 없음</div>
+        )}
         {months.map((m) => (
-          <a key={m} href={`#${m}`} className="sidebar-link">
+          <button
+            key={m}
+            className={`sidebar-link ${monthFilter === m ? "active" : ""}`}
+            onClick={() => setMonthFilter(monthFilter === m ? null : m)}
+          >
             {m}
-          </a>
+          </button>
         ))}
       </nav>
       <div className="sidebar-footer">
@@ -38,7 +52,7 @@ export function Sidebar() {
         <button
           className="sidebar-update-link"
           onClick={() => triggerUpdateCheck()}
-          title="GitHub Releases에서 새 버전이 있는지 확인"
+          title="GitHub Releases에서 새 버전 확인"
         >
           업데이트 확인
         </button>

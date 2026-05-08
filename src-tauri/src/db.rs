@@ -107,6 +107,42 @@ impl Db {
         Ok(())
     }
 
+    /// Atomic rename: when the user changes a row's trade_date (the PK),
+    /// delete the row at `old_trade_date` and upsert at the new key in one
+    /// transaction. If the keys are equal, this is just an upsert.
+    pub fn rename_or_upsert(
+        &mut self,
+        old_trade_date: &str,
+        day: &TradingDay,
+    ) -> AppResult<()> {
+        let tx = self.conn.transaction()?;
+        if old_trade_date != day.trade_date {
+            tx.execute(
+                "DELETE FROM trading_day WHERE trade_date = ?1",
+                params![old_trade_date],
+            )?;
+        }
+        tx.execute(
+            "INSERT INTO trading_day (trade_date, deposit, withdrawal, end_balance, note, updated_at) \
+             VALUES (?1, ?2, ?3, ?4, ?5, strftime('%Y-%m-%dT%H:%M:%fZ','now')) \
+             ON CONFLICT(trade_date) DO UPDATE SET \
+               deposit = excluded.deposit, \
+               withdrawal = excluded.withdrawal, \
+               end_balance = excluded.end_balance, \
+               note = excluded.note, \
+               updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')",
+            params![
+                day.trade_date,
+                day.deposit,
+                day.withdrawal,
+                day.end_balance,
+                day.note,
+            ],
+        )?;
+        tx.commit()?;
+        Ok(())
+    }
+
     /// Atomically replaces the entire `trading_day` table contents with `days`.
     /// Used by undo/redo so that rows that existed only in the redone-away
     /// state actually disappear from disk.

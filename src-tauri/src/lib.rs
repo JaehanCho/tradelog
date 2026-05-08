@@ -35,6 +35,7 @@ pub fn run() {
             upsert_trading_days,
             delete_trading_day,
             replace_all_trading_days,
+            rename_or_upsert_trading_day,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

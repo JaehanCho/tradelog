@@ -27,6 +27,16 @@ pub fn upsert_trading_day(state: State<'_, AppState>, day: TradingDay) -> AppRes
 }
 
 #[tauri::command]
+pub fn rename_or_upsert_trading_day(
+    state: State<'_, AppState>,
+    old_trade_date: String,
+    day: TradingDay,
+) -> AppResult<()> {
+    let mut db = state.db.lock();
+    db.rename_or_upsert(&old_trade_date, &day)
+}
+
+#[tauri::command]
 pub fn upsert_trading_days(
     state: State<'_, AppState>,
     days: Vec<TradingDay>,

@@ -12,4 +12,6 @@ export const api = {
     invoke<void>("delete_trading_day", { tradeDate }),
   replaceAll: (days: TradingDay[]) =>
     invoke<void>("replace_all_trading_days", { days }),
+  renameOrUpsert: (oldTradeDate: string, day: TradingDay) =>
+    invoke<void>("rename_or_upsert_trading_day", { oldTradeDate, day }),
 };

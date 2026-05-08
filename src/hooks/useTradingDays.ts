@@ -16,12 +16,18 @@ interface State {
   history: HistoryEntry[];
   historyIdx: number;
 
+  /** When set (e.g. "2026-04"), grids/views filter by this month. */
+  monthFilter: string | null;
+
   load: () => Promise<void>;
   upsertOne: (day: TradingDay) => Promise<void>;
   upsertMany: (days: TradingDay[]) => Promise<void>;
+  /** Rename an existing row's PK (trade_date) atomically. */
+  renameDay: (oldTradeDate: string, day: TradingDay) => Promise<void>;
   remove: (tradeDate: string) => Promise<void>;
   undo: () => Promise<void>;
   redo: () => Promise<void>;
+  setMonthFilter: (m: string | null) => void;
 }
 
 const sortByDate = (rows: TradingDay[]) =>
@@ -41,6 +47,9 @@ export const useTradingDays = create<State>((set, get) => ({
   error: null,
   history: [],
   historyIdx: -1,
+  monthFilter: null,
+
+  setMonthFilter: (m) => set({ monthFilter: m }),
 
   load: async () => {
     set({ loading: true, error: null });
@@ -71,6 +80,30 @@ export const useTradingDays = create<State>((set, get) => ({
       else set({ confirmed: merge(get().confirmed, [day]) });
     } catch (e) {
       // Roll back optimistic change to the last confirmed snapshot.
+      set({
+        error: String(e),
+        raw: prevConfirmed,
+        computed: computeTradingDays(prevConfirmed),
+      });
+    }
+  },
+
+  renameDay: async (oldTradeDate, day) => {
+    const prevConfirmed = get().confirmed;
+    const filtered = get().raw.filter((r) => r.trade_date !== oldTradeDate);
+    const next = merge(filtered, [day]);
+    set(pushHistory(next, get));
+    try {
+      await api.renameOrUpsert(oldTradeDate, day);
+      if (get().raw === next) set({ confirmed: next });
+      else {
+        const merged = merge(
+          get().confirmed.filter((r) => r.trade_date !== oldTradeDate),
+          [day],
+        );
+        set({ confirmed: merged });
+      }
+    } catch (e) {
       set({
         error: String(e),
         raw: prevConfirmed,

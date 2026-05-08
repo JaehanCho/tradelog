@@ -7,7 +7,6 @@ import "react-data-grid/lib/styles.css";
 
 import { useTradingDays } from "../hooks/useTradingDays";
 import { nextDay, todayKST } from "../lib/dates";
-import { parseClipboardTsv } from "../lib/paste-parser";
 import { NoteEditor } from "./NoteEditor";
 import type { ComputedTradingDay } from "../types/trading-day";
 
@@ -48,12 +47,6 @@ const numericEditor =
     />
   );
 
-/**
- * For the very first row only, "시작금액" is editable as a way to set the
- * initial capital. Internally we write to `deposit` because compute.ts
- * treats the first row's deposit as start_balance when there's no prior
- * end_balance to chain from.
- */
 const startBalanceFirstRowEditor = ({
   row,
   onRowChange,
@@ -108,8 +101,11 @@ type Toast = { kind: "ok" | "warn"; msg: string };
 
 export function TradingGrid() {
   const computed = useTradingDays((s) => s.computed);
+  const monthFilter = useTradingDays((s) => s.monthFilter);
+  const setMonthFilter = useTradingDays((s) => s.setMonthFilter);
   const upsertOne = useTradingDays((s) => s.upsertOne);
-  const upsertMany = useTradingDays((s) => s.upsertMany);
+  const renameDay = useTradingDays((s) => s.renameDay);
+  const remove = useTradingDays((s) => s.remove);
   const undo = useTradingDays((s) => s.undo);
   const redo = useTradingDays((s) => s.redo);
 
@@ -121,7 +117,19 @@ export function TradingGrid() {
     window.setTimeout(() => setToast(null), 3500);
   }, []);
 
-  const rows = computed;
+  // Track previous trade_date per row index so we can detect PK rename in
+  // onRowsChange (RDG's callback gives us the new state, not the diff).
+  const prevDateByIndex = useRef<string[]>([]);
+  useEffect(() => {
+    prevDateByIndex.current = computed.map((r) => r.trade_date);
+  }, [computed]);
+
+  // Display-filtered rows. Underlying compute always uses the full series so
+  // start_balance / cumulative_pnl etc. stay correct even when user filters.
+  const rows = useMemo(() => {
+    if (!monthFilter) return computed;
+    return computed.filter((r) => r.trade_date.startsWith(monthFilter));
+  }, [computed, monthFilter]);
 
   const addRow = useCallback(() => {
     const last = computed[computed.length - 1];
@@ -135,12 +143,19 @@ export function TradingGrid() {
     });
   }, [computed, upsertOne]);
 
+  const deleteRow = useCallback(
+    (tradeDate: string) => {
+      void remove(tradeDate);
+    },
+    [remove],
+  );
+
   const columns = useMemo<Column<ComputedTradingDay>[]>(
     () => [
       {
         key: "trade_date",
         name: "날짜",
-        width: 120,
+        width: 130,
         editable: true,
         renderEditCell: dateEditor,
       },
@@ -156,10 +171,7 @@ export function TradingGrid() {
         key: "start_balance",
         name: "시작금액",
         width: 130,
-        // First row only: editable as a shortcut for "initial capital".
         editable: (row) => rows[0]?.trade_date === row.trade_date,
-        cellClass: (row) =>
-          rows[0]?.trade_date === row.trade_date ? "" : "readonly-cell",
         renderCell: ({ row }) => (
           <span
             className={
@@ -227,10 +239,34 @@ export function TradingGrid() {
         name: "비고",
         minWidth: 240,
         editable: true,
+        renderCell: ({ row }) => (
+          <span className="note-cell" title={row.note}>
+            {row.note}
+          </span>
+        ),
         renderEditCell: NoteEditor,
       },
+      {
+        key: "_actions",
+        name: "",
+        width: 44,
+        editable: false,
+        cellClass: "row-actions",
+        renderCell: ({ row }) => (
+          <button
+            className="row-delete"
+            title="이 거래일 삭제"
+            onClick={(e) => {
+              e.stopPropagation();
+              deleteRow(row.trade_date);
+            }}
+          >
+            ✕
+          </button>
+        ),
+      },
     ],
-    [rows],
+    [rows, deleteRow],
   );
 
   const onRowsChange = useCallback(
@@ -241,7 +277,10 @@ export function TradingGrid() {
       const idx = data.indexes[0];
       const row = next[idx];
       if (!row || !row.trade_date) return;
-      void upsertOne({
+
+      const oldRow = rows[idx];
+      const oldDate = oldRow?.trade_date;
+      const payload = {
         trade_date: row.trade_date,
         deposit: Number(row.deposit) || 0,
         withdrawal: Number(row.withdrawal) || 0,
@@ -250,42 +289,17 @@ export function TradingGrid() {
             ? null
             : Number(row.end_balance),
         note: row.note ?? "",
-      });
-    },
-    [upsertOne],
-  );
+      };
 
-  // Window-level paste listener so it fires regardless of focus location.
-  useEffect(() => {
-    const onPaste = (e: ClipboardEvent) => {
-      // Don't swallow paste when an inline cell editor is active — it may
-      // be pasting a single value into an <input>.
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
-
-      const text = e.clipboardData?.getData("text/plain") ?? "";
-      if (!text.includes("\t") && !text.includes("\n")) return;
-      e.preventDefault();
-
-      const today = new Date();
-      const parsed = parseClipboardTsv(text, {
-        defaultYear: today.getFullYear(),
-        defaultMonth: today.getMonth() + 1,
-      });
-      if (parsed.length === 0) {
-        showToast({
-          kind: "warn",
-          msg: "붙여넣은 데이터에서 거래일을 못 읽었어. 첫 컬럼이 날짜인지 확인해줘.",
-        });
-        return;
+      if (oldDate && oldDate !== row.trade_date) {
+        // Date PK changed -> atomic rename (DELETE old + INSERT new).
+        void renameDay(oldDate, payload);
+      } else {
+        void upsertOne(payload);
       }
-      void upsertMany(parsed);
-      showToast({ kind: "ok", msg: `${parsed.length}개 거래일 추가됨` });
-    };
-
-    window.addEventListener("paste", onPaste, true);
-    return () => window.removeEventListener("paste", onPaste, true);
-  }, [upsertMany, showToast]);
+    },
+    [rows, renameDay, upsertOne],
+  );
 
   // Cmd+Z / Cmd+Shift+Z
   useEffect(() => {
@@ -308,7 +322,19 @@ export function TradingGrid() {
     <div ref={containerRef} className="trading-grid" tabIndex={0}>
       <div className="grid-toolbar">
         <div className="grid-hint">
-          셀 더블클릭해서 편집 · 엑셀에서 row 복사 후 어디서든 ⌘V · ⌘Z 실행취소
+          {monthFilter ? (
+            <>
+              <strong>{monthFilter}</strong> 만 보는 중
+              <button
+                className="grid-filter-clear"
+                onClick={() => setMonthFilter(null)}
+              >
+                전체 보기
+              </button>
+            </>
+          ) : (
+            <>셀 더블클릭해서 편집 · ⌘Z 실행취소 · 행 끝 ✕로 삭제</>
+          )}
         </div>
         <button className="btn btn-primary btn-sm" onClick={addRow}>
           + 거래일 추가
@@ -317,23 +343,20 @@ export function TradingGrid() {
 
       {rows.length === 0 ? (
         <div className="grid-empty">
-          <div className="grid-empty-title">아직 거래 데이터가 없어요</div>
+          <div className="grid-empty-title">
+            {monthFilter
+              ? `${monthFilter} 에 데이터가 없어요`
+              : "아직 거래 데이터가 없어요"}
+          </div>
           <div className="grid-empty-msg">
-            <strong>방법 1.</strong> 아래 버튼으로 첫 거래일을 추가하고
-            셀 더블클릭으로 입력
+            "+ 첫 거래일 추가"로 행을 만들고, 셀을 더블클릭해서 입력해.
             <br />
-            <strong>방법 2.</strong> 엑셀에서 9개 컬럼{" "}
-            <code>[날짜 / 입금 / 시작금액 / 최종금액 / 일일수익 /
-              일별수익률 / 누적수익률 / 출금 / 비고]</code>{" "}
-            을 row 단위로 복사한 뒤 어디서든 ⌘V
+            첫 거래일에는 <strong>시작금액</strong> 또는 <strong>입금</strong>{" "}
+            칸에 시작 자본금을 넣으면 돼.
           </div>
           <button className="btn btn-primary" onClick={addRow}>
             + 첫 거래일 추가
           </button>
-          <div className="grid-empty-tip">
-            첫 거래일은 <strong>시작금액</strong> 또는 <strong>입금</strong>{" "}
-            칸에 시작 자본금을 넣으면 돼 (둘 다 동일).
-          </div>
         </div>
       ) : (
         <DataGrid<ComputedTradingDay>
