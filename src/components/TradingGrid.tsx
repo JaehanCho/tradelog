@@ -8,6 +8,7 @@ import "react-data-grid/lib/styles.css";
 import { useTradingDays } from "../hooks/useTradingDays";
 import { api } from "../lib/api";
 import { nextDay, todayKST } from "../lib/dates";
+import { NoteCell } from "./NoteCell";
 import { NoteEditor } from "./NoteEditor";
 import type { ComputedTradingDay } from "../types/trading-day";
 
@@ -126,6 +127,7 @@ export function TradingGrid() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [hintOpen, setHintOpen] = useState(false);
   const [selectedCell, setSelectedCell] = useState<SelectedCell>(null);
   const selectedCellRef = useRef<SelectedCell>(null);
   selectedCellRef.current = selectedCell;
@@ -257,11 +259,7 @@ export function TradingGrid() {
         name: "비고",
         minWidth: 240,
         editable: true,
-        renderCell: ({ row }) => (
-          <span className="note-cell" title={row.note}>
-            {row.note}
-          </span>
-        ),
+        renderCell: ({ row }) => <NoteCell note={row.note ?? ""} />,
         renderEditCell: NoteEditor,
       },
       {
@@ -414,7 +412,7 @@ export function TradingGrid() {
       }
     }
 
-    async function pasteRow(target: ComputedTradingDay) {
+    async function pasteRow(_target: ComputedTradingDay) {
       let raw: string;
       try {
         raw = (await api.clipboardRead()).trim();
@@ -448,11 +446,14 @@ export function TradingGrid() {
         showToast({ kind: "warn", msg: "복사된 행의 날짜가 이상함" });
         return;
       }
-      // Full row paste: target row gets ALL of src's fields, including
-      // trade_date. rename_or_upsert handles the conflict case by
-      // DELETE-old + ON CONFLICT update at src.trade_date.
-      const payload = {
-        trade_date: src.trade_date,
+      // Always duplicate (never destroy). If src's date is already taken,
+      // walk forward day-by-day until we find a free slot.
+      const occupied = new Set(computed.map((r) => r.trade_date));
+      let date = src.trade_date;
+      while (occupied.has(date)) date = nextDay(date);
+
+      await upsertOne({
+        trade_date: date,
         deposit: Number(src.deposit) || 0,
         withdrawal: Number(src.withdrawal) || 0,
         end_balance:
@@ -460,26 +461,14 @@ export function TradingGrid() {
             ? null
             : Number(src.end_balance),
         note: String(src.note ?? ""),
-      };
-      const overwroteAnother = computed.some(
-        (r) =>
-          r.trade_date === src.trade_date &&
-          r.trade_date !== target.trade_date,
-      );
-      await renameDay(target.trade_date, payload);
-      if (src.trade_date === target.trade_date) {
-        showToast({ kind: "ok", msg: "행 붙여넣음" });
-      } else if (overwroteAnother) {
-        showToast({
-          kind: "ok",
-          msg: `${src.trade_date} 행 덮어씀 (⌘Z로 복구)`,
-        });
-      } else {
-        showToast({
-          kind: "ok",
-          msg: `${target.trade_date} → ${src.trade_date} 로 이동`,
-        });
-      }
+      });
+      showToast({
+        kind: "ok",
+        msg:
+          date === src.trade_date
+            ? `행 복사 → ${date}`
+            : `${src.trade_date} 자리 차서 → ${date} 에 복사`,
+      });
     }
 
     async function applyCellPaste(
@@ -563,10 +552,46 @@ export function TradingGrid() {
               </button>
             </>
           ) : (
-            <>
-              셀 클릭 후 ⌘C/⌘V · 행 전체는 ⌘⇧C/⌘⇧V · 더블클릭으로 편집 · ⌘Z
-              실행취소 · 행 끝 ✕로 삭제
-            </>
+            <span
+              className="grid-hint-anchor"
+              onMouseEnter={() => setHintOpen(true)}
+              onMouseLeave={() => setHintOpen(false)}
+            >
+              <button
+                type="button"
+                className="grid-hint-icon"
+                aria-label="단축키 도움말"
+                onClick={() => setHintOpen((o) => !o)}
+                onFocus={() => setHintOpen(true)}
+                onBlur={() => setHintOpen(false)}
+              >
+                ?
+              </button>
+              {hintOpen && (
+                <div className="grid-hint-popover" role="tooltip">
+                  <div className="grid-hint-row">
+                    <kbd>⌘C</kbd> <kbd>⌘V</kbd>
+                    <span>셀 단위 복사/붙여넣기</span>
+                  </div>
+                  <div className="grid-hint-row">
+                    <kbd>⌘⇧C</kbd> <kbd>⌘⇧V</kbd>
+                    <span>행 단위 복사/붙여넣기</span>
+                  </div>
+                  <div className="grid-hint-row">
+                    <kbd>더블클릭</kbd>
+                    <span>셀 편집</span>
+                  </div>
+                  <div className="grid-hint-row">
+                    <kbd>⌘Z</kbd>
+                    <span>실행 취소</span>
+                  </div>
+                  <div className="grid-hint-row">
+                    <kbd>✕</kbd>
+                    <span>행 삭제 (행 끝)</span>
+                  </div>
+                </div>
+              )}
+            </span>
           )}
         </div>
         <button className="btn btn-primary btn-sm" onClick={addRow}>
