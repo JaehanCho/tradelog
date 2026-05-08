@@ -5,11 +5,12 @@ use rusqlite_migration::{Migrations, M};
 use tauri::Manager;
 
 use crate::error::{AppError, AppResult};
-use crate::models::TradingDay;
+use crate::models::{DefiPosition, DefiSnapshot, TradingDay};
 
 const MIGRATION_0001: &str = include_str!("../migrations/0001_initial.sql");
 const MIGRATION_0002: &str = include_str!("../migrations/0002_settings.sql");
 const MIGRATION_0003: &str = include_str!("../migrations/0003_market_note.sql");
+const MIGRATION_0004: &str = include_str!("../migrations/0004_defi.sql");
 
 pub struct Db {
     conn: Connection,
@@ -31,6 +32,7 @@ impl Db {
             M::up(MIGRATION_0001),
             M::up(MIGRATION_0002),
             M::up(MIGRATION_0003),
+            M::up(MIGRATION_0004),
         ]);
         migrations.to_latest(&mut conn)?;
 
@@ -180,6 +182,94 @@ impl Db {
         Ok(())
     }
 
+    // ─── DeFi positions ────────────────────────────────────────────
+
+    pub fn get_defi_positions(&self) -> AppResult<Vec<DefiPosition>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, protocol, chain, asset, principal_usd, opened_date, \
+                    closed_date, note, created_at, updated_at \
+             FROM defi_position \
+             ORDER BY (closed_date IS NOT NULL), opened_date DESC",
+        )?;
+        let rows = stmt
+            .query_map([], row_to_defi_position)?
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(rows)
+    }
+
+    pub fn upsert_defi_position(&mut self, p: &DefiPosition) -> AppResult<()> {
+        self.conn.execute(
+            "INSERT INTO defi_position \
+                 (id, protocol, chain, asset, principal_usd, opened_date, closed_date, note, updated_at) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, strftime('%Y-%m-%dT%H:%M:%fZ','now')) \
+             ON CONFLICT(id) DO UPDATE SET \
+                 protocol = excluded.protocol, \
+                 chain = excluded.chain, \
+                 asset = excluded.asset, \
+                 principal_usd = excluded.principal_usd, \
+                 opened_date = excluded.opened_date, \
+                 closed_date = excluded.closed_date, \
+                 note = excluded.note, \
+                 updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')",
+            params![
+                p.id,
+                p.protocol,
+                p.chain,
+                p.asset,
+                p.principal_usd,
+                p.opened_date,
+                p.closed_date,
+                p.note,
+            ],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_defi_position(&mut self, id: &str) -> AppResult<()> {
+        self.conn.execute(
+            "DELETE FROM defi_position WHERE id = ?1",
+            params![id],
+        )?;
+        Ok(())
+    }
+
+    pub fn get_position_snapshots(&self, position_id: &str) -> AppResult<Vec<DefiSnapshot>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, position_id, snapshot_date, value_usd, fees_earned_usd, note, created_at \
+             FROM defi_snapshot WHERE position_id = ?1 \
+             ORDER BY snapshot_date DESC",
+        )?;
+        let rows = stmt
+            .query_map(params![position_id], row_to_defi_snapshot)?
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(rows)
+    }
+
+    pub fn add_position_snapshot(&mut self, s: &DefiSnapshot) -> AppResult<()> {
+        self.conn.execute(
+            "INSERT INTO defi_snapshot \
+                 (id, position_id, snapshot_date, value_usd, fees_earned_usd, note) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![
+                s.id,
+                s.position_id,
+                s.snapshot_date,
+                s.value_usd,
+                s.fees_earned_usd,
+                s.note,
+            ],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_position_snapshot(&mut self, id: &str) -> AppResult<()> {
+        self.conn.execute(
+            "DELETE FROM defi_snapshot WHERE id = ?1",
+            params![id],
+        )?;
+        Ok(())
+    }
+
     /// Atomically replaces the entire `trading_day` table contents with `days`.
     /// Used by undo/redo so that rows that existed only in the redone-away
     /// state actually disappear from disk.
@@ -205,6 +295,33 @@ impl Db {
         tx.commit()?;
         Ok(())
     }
+}
+
+fn row_to_defi_position(row: &rusqlite::Row<'_>) -> rusqlite::Result<DefiPosition> {
+    Ok(DefiPosition {
+        id: row.get(0)?,
+        protocol: row.get(1)?,
+        chain: row.get(2)?,
+        asset: row.get(3)?,
+        principal_usd: row.get(4)?,
+        opened_date: row.get(5)?,
+        closed_date: row.get(6)?,
+        note: row.get(7)?,
+        created_at: row.get(8)?,
+        updated_at: row.get(9)?,
+    })
+}
+
+fn row_to_defi_snapshot(row: &rusqlite::Row<'_>) -> rusqlite::Result<DefiSnapshot> {
+    Ok(DefiSnapshot {
+        id: row.get(0)?,
+        position_id: row.get(1)?,
+        snapshot_date: row.get(2)?,
+        value_usd: row.get(3)?,
+        fees_earned_usd: row.get(4)?,
+        note: row.get(5)?,
+        created_at: row.get(6)?,
+    })
 }
 
 fn row_to_trading_day(row: &rusqlite::Row<'_>) -> rusqlite::Result<TradingDay> {

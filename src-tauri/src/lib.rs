@@ -39,6 +39,12 @@ pub fn run() {
             rename_or_upsert_trading_day,
             get_settings,
             set_setting,
+            get_defi_positions,
+            upsert_defi_position,
+            delete_defi_position,
+            get_position_snapshots,
+            add_position_snapshot,
+            delete_position_snapshot,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,7 +1,7 @@
 use tauri::State;
 
 use crate::error::AppResult;
-use crate::models::TradingDay;
+use crate::models::{DefiPosition, DefiSnapshot, TradingDay};
 use crate::AppState;
 
 #[tauri::command]
@@ -76,4 +76,51 @@ pub fn replace_all_trading_days(
 ) -> AppResult<()> {
     let mut db = state.db.lock();
     db.replace_all(&days)
+}
+
+// ─── DeFi positions / snapshots ──────────────────────────────────────────
+
+#[tauri::command]
+pub fn get_defi_positions(state: State<'_, AppState>) -> AppResult<Vec<DefiPosition>> {
+    let db = state.db.lock();
+    db.get_defi_positions()
+}
+
+#[tauri::command]
+pub fn upsert_defi_position(
+    state: State<'_, AppState>,
+    position: DefiPosition,
+) -> AppResult<()> {
+    let mut db = state.db.lock();
+    db.upsert_defi_position(&position)
+}
+
+#[tauri::command]
+pub fn delete_defi_position(state: State<'_, AppState>, id: String) -> AppResult<()> {
+    let mut db = state.db.lock();
+    db.delete_defi_position(&id)
+}
+
+#[tauri::command]
+pub fn get_position_snapshots(
+    state: State<'_, AppState>,
+    position_id: String,
+) -> AppResult<Vec<DefiSnapshot>> {
+    let db = state.db.lock();
+    db.get_position_snapshots(&position_id)
+}
+
+#[tauri::command]
+pub fn add_position_snapshot(
+    state: State<'_, AppState>,
+    snapshot: DefiSnapshot,
+) -> AppResult<()> {
+    let mut db = state.db.lock();
+    db.add_position_snapshot(&snapshot)
+}
+
+#[tauri::command]
+pub fn delete_position_snapshot(state: State<'_, AppState>, id: String) -> AppResult<()> {
+    let mut db = state.db.lock();
+    db.delete_position_snapshot(&id)
 }

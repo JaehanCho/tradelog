@@ -29,6 +29,44 @@ export type Messages = {
     endBalanceLabel: string;
     openAria: string;
   };
+  defi: {
+    title: string;
+    addPosition: string;
+    activeHeading: string;
+    closedHeading: string;
+    emptyTitle: string;
+    emptyMsg: string;
+    cardPrincipal: string;
+    cardCurrent: string;
+    cardApr: string;
+    cardAge: (days: number) => string;
+    cardClosed: string;
+    cardNoSnapshot: string;
+    drawerNew: string;
+    drawerEdit: string;
+    fieldProtocol: string;
+    fieldChain: string;
+    fieldAsset: string;
+    fieldPrincipal: string;
+    fieldOpened: string;
+    fieldClosed: string;
+    fieldNote: string;
+    snapshotsHeading: string;
+    addSnapshot: string;
+    snapshotDate: string;
+    snapshotValue: string;
+    snapshotFees: string;
+    snapshotNote: string;
+    deletePosition: string;
+    deletePositionConfirm: string;
+    save: string;
+    cancel: string;
+  };
+  totalAssets: {
+    label: string;
+    sectorTrading: string;
+    sectorDefi: string;
+  };
   grid: {
     headerDate: string;
     headerDeposit: string;
@@ -164,6 +202,45 @@ const ko: Messages = {
     cumReturnLabel: "누적수익률",
     endBalanceLabel: "최종금액",
     openAria: "이 날 상세 보기",
+  },
+  defi: {
+    title: "DeFi 포지션",
+    addPosition: "+ 포지션 추가",
+    activeHeading: "운용 중",
+    closedHeading: "종료된 포지션",
+    emptyTitle: "아직 등록된 포지션이 없어요",
+    emptyMsg:
+      "Aave, Curve, GMX 같이 자금을 굴리는 곳을 등록하고 주기적으로 가치를 기록하세요.",
+    cardPrincipal: "원금",
+    cardCurrent: "현재가치",
+    cardApr: "APR (근사)",
+    cardAge: (days) => `${days}일째`,
+    cardClosed: "종료",
+    cardNoSnapshot: "스냅샷 없음 — 추가하기",
+    drawerNew: "새 포지션",
+    drawerEdit: "포지션 편집",
+    fieldProtocol: "프로토콜",
+    fieldChain: "체인",
+    fieldAsset: "자산 / 페어",
+    fieldPrincipal: "원금 (USD)",
+    fieldOpened: "오픈 날짜",
+    fieldClosed: "종료 날짜 (선택)",
+    fieldNote: "메모",
+    snapshotsHeading: "스냅샷",
+    addSnapshot: "+ 스냅샷",
+    snapshotDate: "날짜",
+    snapshotValue: "현재 가치 (USD)",
+    snapshotFees: "누적 수수료/리워드 (USD)",
+    snapshotNote: "메모",
+    deletePosition: "포지션 삭제",
+    deletePositionConfirm: "이 포지션을 삭제할까요? 스냅샷도 함께 삭제됩니다.",
+    save: "저장",
+    cancel: "취소",
+  },
+  totalAssets: {
+    label: "통합 자산",
+    sectorTrading: "거래",
+    sectorDefi: "DeFi",
   },
   grid: {
     headerDate: "날짜",
@@ -301,6 +378,45 @@ const en: Messages = {
     cumReturnLabel: "Cumulative return",
     endBalanceLabel: "End balance",
     openAria: "Open day details",
+  },
+  defi: {
+    title: "DeFi Positions",
+    addPosition: "+ Add position",
+    activeHeading: "Active",
+    closedHeading: "Closed",
+    emptyTitle: "No positions yet",
+    emptyMsg:
+      "Track positions in Aave, Curve, GMX, etc. and record their value over time.",
+    cardPrincipal: "Principal",
+    cardCurrent: "Current",
+    cardApr: "APR (approx)",
+    cardAge: (days) => `${days}d ago`,
+    cardClosed: "Closed",
+    cardNoSnapshot: "No snapshot — add one",
+    drawerNew: "New position",
+    drawerEdit: "Edit position",
+    fieldProtocol: "Protocol",
+    fieldChain: "Chain",
+    fieldAsset: "Asset / Pair",
+    fieldPrincipal: "Principal (USD)",
+    fieldOpened: "Opened",
+    fieldClosed: "Closed (optional)",
+    fieldNote: "Note",
+    snapshotsHeading: "Snapshots",
+    addSnapshot: "+ Snapshot",
+    snapshotDate: "Date",
+    snapshotValue: "Value (USD)",
+    snapshotFees: "Cumulative fees/rewards (USD)",
+    snapshotNote: "Note",
+    deletePosition: "Delete position",
+    deletePositionConfirm: "Delete this position? Its snapshots will be removed too.",
+    save: "Save",
+    cancel: "Cancel",
+  },
+  totalAssets: {
+    label: "Total assets",
+    sectorTrading: "Trading",
+    sectorDefi: "DeFi",
   },
   grid: {
     headerDate: "Date",

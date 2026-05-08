@@ -1139,3 +1139,359 @@ button {
   background: rgba(127, 127, 127, 0.14);
   color: var(--accent);
 }
+
+/* ───── Total assets / sector breakdown ─────────────────────────── */
+
+.balance-bar {
+  display: flex;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: rgba(127, 127, 127, 0.12);
+  margin-top: 10px;
+}
+.balance-bar-trading {
+  background: var(--accent);
+  min-width: 2px;
+}
+.balance-bar-defi {
+  background: #34c759;
+  min-width: 2px;
+}
+
+.balance-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+.balance-sector {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 6px;
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--text-primary);
+}
+.balance-sector:hover {
+  background: rgba(127, 127, 127, 0.08);
+  border-color: var(--separator);
+}
+.balance-sector-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.balance-sector-dot.tone-trading {
+  background: var(--accent);
+}
+.balance-sector-dot.tone-defi {
+  background: #34c759;
+}
+.balance-sector-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.balance-sector-value {
+  font-size: 13px;
+  font-weight: 600;
+  grid-column: 1 / -1;
+  margin-top: 2px;
+}
+.balance-sector-pct {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  align-self: start;
+}
+
+/* ───── DeFi board ──────────────────────────────────────────────── */
+
+.defi-board {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.defi-board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.defi-board-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.defi-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.defi-section-heading {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin: 8px 0 0;
+  font-weight: 600;
+}
+
+.defi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.defi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface-elev);
+  text-align: left;
+  font: inherit;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.05s;
+}
+.defi-card:hover {
+  border-color: var(--accent);
+}
+.defi-card:active {
+  transform: translateY(1px);
+}
+.defi-card.is-closed {
+  opacity: 0.7;
+}
+
+.defi-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  border-bottom: 1px solid var(--separator);
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+}
+.defi-card-title {
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.defi-card-protocol {
+  font-size: 14px;
+  font-weight: 600;
+}
+.defi-card-asset {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.defi-card-chain {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.defi-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12px;
+}
+.defi-card-row-label {
+  color: var(--text-secondary);
+}
+.defi-card-row-value {
+  font-weight: 600;
+}
+.defi-card-row-value.tone-pos {
+  color: var(--positive);
+}
+.defi-card-row-value.tone-neg {
+  color: var(--negative);
+}
+.defi-card-delta {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.defi-card-foot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--separator);
+}
+.defi-card-foot-item strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.defi-card-hint {
+  font-size: 11px;
+  color: var(--accent);
+  margin-top: 2px;
+}
+
+.defi-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 24px;
+  border: 1px dashed var(--separator-strong);
+  border-radius: var(--radius-md, 12px);
+  text-align: center;
+  color: var(--text-secondary);
+}
+.defi-empty-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.defi-empty-msg {
+  font-size: 13px;
+  max-width: 480px;
+}
+
+/* ───── DeFi drawer / form ──────────────────────────────────────── */
+
+.defi-drawer {
+  width: min(520px, 95vw);
+}
+
+.defi-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+}
+.defi-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.defi-field:has(textarea),
+.defi-field:nth-child(7) {
+  grid-column: 1 / -1;
+}
+.defi-field-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+.defi-field input,
+.defi-field textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--separator-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-solid);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.defi-field input:focus,
+.defi-field textarea:focus {
+  border-color: var(--accent);
+}
+
+.defi-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.defi-snapshots {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--separator);
+  padding-top: 12px;
+}
+.defi-snapshots-head h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin: 0;
+  font-weight: 600;
+}
+.defi-snapshot-add {
+  display: grid;
+  grid-template-columns: 130px 1fr 1fr 2fr auto;
+  gap: 6px;
+  align-items: center;
+}
+.defi-snapshot-add input {
+  padding: 6px 8px;
+  border: 1px solid var(--separator-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-solid);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+  outline: none;
+}
+.defi-snapshot-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.defi-snapshot-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 1fr 2fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+}
+.defi-snapshot-row:hover {
+  background: rgba(127, 127, 127, 0.08);
+}
+.defi-snapshot-date {
+  color: var(--text-secondary);
+}
+.defi-snapshot-value {
+  font-weight: 600;
+}
+.defi-snapshot-fees {
+  color: var(--positive);
+}
+.defi-snapshot-note {
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.defi-delete {
+  color: var(--negative);
+  border-color: var(--negative);
+}

@@ -3,6 +3,7 @@ import {
   readText as clipboardReadText,
   writeText as clipboardWriteText,
 } from "@tauri-apps/plugin-clipboard-manager";
+import type { DefiPosition, DefiSnapshot } from "../types/defi";
 import type { TradingDay } from "../types/trading-day";
 
 export const api = {
@@ -21,6 +22,18 @@ export const api = {
   getSettings: () => invoke<Record<string, string>>("get_settings"),
   setSetting: (key: string, value: string) =>
     invoke<void>("set_setting", { key, value }),
+  // DeFi
+  getDefiPositions: () => invoke<DefiPosition[]>("get_defi_positions"),
+  upsertDefiPosition: (position: DefiPosition) =>
+    invoke<void>("upsert_defi_position", { position }),
+  deleteDefiPosition: (id: string) =>
+    invoke<void>("delete_defi_position", { id }),
+  getPositionSnapshots: (positionId: string) =>
+    invoke<DefiSnapshot[]>("get_position_snapshots", { positionId }),
+  addPositionSnapshot: (snapshot: DefiSnapshot) =>
+    invoke<void>("add_position_snapshot", { snapshot }),
+  deletePositionSnapshot: (id: string) =>
+    invoke<void>("delete_position_snapshot", { id }),
   // Tauri's native clipboard avoids macOS's "Allow paste from <App>" prompt
   // that navigator.clipboard.readText() triggers on each paste.
   clipboardRead: async (): Promise<string> =>
