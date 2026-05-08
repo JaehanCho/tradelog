@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { useTradingDays } from "../hooks/useTradingDays";
+import { triggerUpdateCheck } from "./UpdateNotification";
 
 export function Sidebar() {
   const computed = useTradingDays((s) => s.computed);
@@ -34,6 +35,13 @@ export function Sidebar() {
       </nav>
       <div className="sidebar-footer">
         <span className="sidebar-version">{version ? `v${version}` : ""}</span>
+        <button
+          className="sidebar-update-link"
+          onClick={() => triggerUpdateCheck()}
+          title="GitHub Releases에서 새 버전이 있는지 확인"
+        >
+          업데이트 확인
+        </button>
       </div>
     </aside>
   );
