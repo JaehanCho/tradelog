@@ -1,7 +1,7 @@
 use tauri::State;
 
 use crate::error::AppResult;
-use crate::models::{DefiPosition, DefiSnapshot, TradingDay};
+use crate::models::{DefiPosition, DefiSnapshot, TradingDay, WisdomNote};
 use crate::AppState;
 
 #[tauri::command]
@@ -123,4 +123,24 @@ pub fn add_position_snapshot(
 pub fn delete_position_snapshot(state: State<'_, AppState>, id: String) -> AppResult<()> {
     let mut db = state.db.lock();
     db.delete_position_snapshot(&id)
+}
+
+// ─── Wisdom notes ────────────────────────────────────────────────────────
+
+#[tauri::command]
+pub fn get_wisdom_notes(state: State<'_, AppState>) -> AppResult<Vec<WisdomNote>> {
+    let db = state.db.lock();
+    db.get_wisdom_notes()
+}
+
+#[tauri::command]
+pub fn upsert_wisdom_note(state: State<'_, AppState>, note: WisdomNote) -> AppResult<()> {
+    let mut db = state.db.lock();
+    db.upsert_wisdom_note(&note)
+}
+
+#[tauri::command]
+pub fn delete_wisdom_note(state: State<'_, AppState>, id: String) -> AppResult<()> {
+    let mut db = state.db.lock();
+    db.delete_wisdom_note(&id)
 }

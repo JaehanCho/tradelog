@@ -57,3 +57,21 @@ pub struct DefiSnapshot {
     #[serde(default)]
     pub created_at: Option<String>,
 }
+
+/// A trading-wisdom note: quote, tip, or personal insight. `tags` is a
+/// comma-separated list (e.g. "psychology,risk"). `pinned` is 0 or 1.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WisdomNote {
+    pub id: String,
+    pub body: String,
+    #[serde(default)]
+    pub source: String,
+    #[serde(default)]
+    pub tags: String,
+    #[serde(default)]
+    pub pinned: i64,
+    #[serde(default)]
+    pub created_at: Option<String>,
+    #[serde(default)]
+    pub updated_at: Option<String>,
+}

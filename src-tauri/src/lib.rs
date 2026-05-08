@@ -45,6 +45,9 @@ pub fn run() {
             get_position_snapshots,
             add_position_snapshot,
             delete_position_snapshot,
+            get_wisdom_notes,
+            upsert_wisdom_note,
+            delete_wisdom_note,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

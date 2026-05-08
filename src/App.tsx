@@ -2,16 +2,17 @@ import { useEffect } from "react";
 import { DefiBoard } from "./components/DefiBoard";
 import { HeroSection } from "./components/HeroSection";
 import { MonthlyStats } from "./components/MonthlyStats";
-import { PlaceholderView } from "./components/PlaceholderView";
 import { PnlCalendar } from "./components/PnlCalendar";
 import { Sidebar } from "./components/Sidebar";
 import { TradingGrid } from "./components/TradingGrid";
 import { UpdateNotification } from "./components/UpdateNotification";
+import { WisdomBoard } from "./components/WisdomBoard";
 import { useDefiPositions } from "./hooks/useDefiPositions";
 import { useTradingDays } from "./hooks/useTradingDays";
 import { useSettings } from "./hooks/useSettings";
 import { useViewMode } from "./hooks/useViewMode";
-import { useDocumentLang, useLocaleStore, useT } from "./i18n";
+import { useWisdomNotes } from "./hooks/useWisdomNotes";
+import { useDocumentLang, useLocaleStore } from "./i18n";
 
 export default function App() {
   const load = useTradingDays((s) => s.load);
@@ -19,8 +20,8 @@ export default function App() {
   const loadLocale = useLocaleStore((s) => s.load);
   const loadView = useViewMode((s) => s.load);
   const loadDefi = useDefiPositions((s) => s.load);
+  const loadWisdom = useWisdomNotes((s) => s.load);
   const view = useViewMode((s) => s.view);
-  const t = useT();
   useDocumentLang();
 
   useEffect(() => {
@@ -29,7 +30,8 @@ export default function App() {
     loadLocale();
     loadView();
     loadDefi();
-  }, [load, loadSettings, loadLocale, loadView, loadDefi]);
+    loadWisdom();
+  }, [load, loadSettings, loadLocale, loadView, loadDefi, loadWisdom]);
 
   return (
     <div className="app-shell">
@@ -46,12 +48,7 @@ export default function App() {
           </>
         )}
         {view === "defi" && <DefiBoard />}
-        {view === "wisdom" && (
-          <PlaceholderView
-            title={t.views.wisdomPlaceholderTitle}
-            message={t.views.wisdomPlaceholderMsg}
-          />
-        )}
+        {view === "wisdom" && <WisdomBoard />}
       </main>
       <UpdateNotification />
     </div>

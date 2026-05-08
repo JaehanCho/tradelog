@@ -34,12 +34,24 @@ That's TradeLog.
 
 - **🍎 macOS-native** — Real Tauri 2 binary, vibrancy sidebar, system colors,
   proper dark mode. No Electron tax.
+- **📂 Multi-sector journal** — Sidebar tabs for **Trading**, **DeFi**, and
+  **Wisdom**. Total assets sum across sectors and live in the always-on hero
+  card.
 - **📅 PnL calendar** — Binance-style heatmap. Green days, red days, see
   your month at a glance.
 - **📈 Equity curve** — Recharts-powered area chart with a goal reference
   line. Watch the line go up.
 - **🎯 Goal tracking** — Set a target balance and date; the hero shows
   progress as a sleek progress bar.
+- **🗒️ Day drawer** — Click ▶ on any row to open a side drawer with the
+  day's stats, the per-trade note, and a separate **market note** for
+  free-form thoughts on what the market did that day.
+- **🌾 DeFi positions** — Track yield-farming / staking positions with
+  protocol, principal, and periodic snapshots. Approximate APR is computed
+  from the latest snapshot vs. principal.
+- **💡 Wisdom archive** — Save quotes, tips, and personal insights as cards
+  with tags, source, and pin support. Masonry layout, instant search,
+  ⌘N for new, ⌘F to focus search.
 - **⌨️ Keyboard-first** — Click a cell, ⌘C/⌘V to copy and paste. ⌘⇧C/⌘⇧V
   copies and clones an entire row to the next free date. ⌘Z undoes anything.
 - **🔢 Auto-compute** — Start balance carries from yesterday's end balance
@@ -72,28 +84,33 @@ the app relaunches into the new version.
 |---|---|
 | **Click a cell** | Select |
 | **Double-click** | Edit |
+| **Click a row's ▶** | Open the day detail drawer |
 | **⌘C** / **⌘V** | Copy/paste a single cell value |
 | **⌘⇧C** / **⌘⇧V** | Copy a row / paste it into the next free date |
 | **⌘Z** / **⌘⇧Z** | Undo / redo (50 steps) |
+| **Esc** (in drawer) | Close the drawer |
+| **⌘Enter** (in drawer textarea) | Save and keep editing |
+| **⌘N** (Wisdom view) | New wisdom note |
+| **⌘F** (Wisdom view) | Focus the search box |
 | **Click a row's ✕** | Delete that day |
 | **Click a calendar month** | Filter the grid to that month |
 
 ## Quick tour
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  Hero: latest balance · daily PnL · goal progress       │
-├─────────────────────────────────────────────────────────┤
-│  Equity curve (with goal reference line)                │
-├──────────────┬──────────────────────────────────────────┤
-│ Monthly      │  PnL calendar (◀ 2026-05 ▶)              │
-│ stats card   │  ┌──┬──┬──┬──┬──┬──┬──┐                  │
-│ - Total PnL  │  │  │  │  │  │  │  │  │                  │
-│ - Win rate   │  │  │ G│ R│ G│  │  │  │                  │
-│ - Avg daily  │  └──┴──┴──┴──┴──┴──┴──┘                  │
-├──────────────┴──────────────────────────────────────────┤
-│  Trading grid (date · deposit · end · PnL · note)       │
-└─────────────────────────────────────────────────────────┘
+┌──────────────┬──────────────────────────────────────────┐
+│  Sidebar     │  Hero: total assets (Trading + DeFi)    │
+│ ▸ Trading    │  + sector breakdown bar                  │
+│   DeFi       ├──────────────────────────────────────────┤
+│   Wisdom     │  Trading view:                            │
+│ ── Months ── │   Equity curve · monthly stats · grid    │
+│   All        │  DeFi view:                               │
+│   2026-05    │   Position cards (active · closed) +     │
+│   2026-04    │   per-position snapshot timeline          │
+│   ...        │  Wisdom view:                             │
+│ ── Footer ── │   Masonry cards · tags · search · ⌘N     │
+│ KO/EN  vX.Y  │                                            │
+└──────────────┴──────────────────────────────────────────┘
 ```
 
 ## Develop
@@ -136,7 +153,10 @@ pnpm tauri build   # produces .app + .dmg under src-tauri/target/...
                                                 ┌────────▼────────┐
                                                 │  SQLite (WAL)   │
                                                 │  trading_day,   │
-                                                │  app_setting    │
+                                                │  app_setting,   │
+                                                │  defi_position, │
+                                                │  defi_snapshot, │
+                                                │  wisdom_note    │
                                                 └─────────────────┘
 ```
 
@@ -170,13 +190,20 @@ locale can't drift out of sync silently.
 
 ## Roadmap
 
+- [x] DeFi / yield-farming sector with periodic snapshots
+- [x] Wisdom archive (quotes, tips, personal insights with tags)
+- [x] Day detail drawer with separate market-note field
 - [ ] CSV / Excel export from the sidebar
 - [ ] Drawdown / max-equity overlay on the curve
 - [ ] Manual dark-mode toggle (system preference + override)
 - [ ] ⌘K command palette
+- [ ] Per-day strategy tags + tag-level analytics
+- [ ] Mood / discipline rating (1–5) with correlation against returns
 - [ ] Note search + date-range filter
 - [ ] Skip weekends / holidays in `+ next day`
 - [ ] Per-trade entry mode (ticker, side, PnL)
+- [ ] DeFi: optional price-API auto-sync for snapshots
+- [ ] Image attachments (clipboard paste) in notes & wisdom
 - [ ] Optional cloud sync (Cloudflare D1 / Supabase)
 
 See [`tasks/todo.md`](tasks/todo.md) for the full backlog and recent

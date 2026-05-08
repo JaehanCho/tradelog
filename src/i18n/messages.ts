@@ -12,12 +12,6 @@ export type Messages = {
     sectionDefi: string;
     sectionWisdom: string;
   };
-  views: {
-    defiPlaceholderTitle: string;
-    defiPlaceholderMsg: string;
-    wisdomPlaceholderTitle: string;
-    wisdomPlaceholderMsg: string;
-  };
   drawer: {
     closeAria: string;
     tradeNoteLabel: string;
@@ -66,6 +60,30 @@ export type Messages = {
     label: string;
     sectorTrading: string;
     sectorDefi: string;
+  };
+  wisdom: {
+    title: string;
+    newButton: string;
+    searchPlaceholder: string;
+    pinFilterLabel: string;
+    allTags: string;
+    pinAria: string;
+    deleteAria: string;
+    drawerNew: string;
+    drawerEdit: string;
+    bodyLabel: string;
+    bodyPlaceholder: string;
+    sourceLabel: string;
+    sourcePlaceholder: string;
+    tagsLabel: string;
+    tagsHint: string;
+    save: string;
+    cancel: string;
+    delete: string;
+    deleteConfirm: string;
+    emptyTitle: string;
+    emptyMsg: string;
+    noMatches: string;
   };
   grid: {
     headerDate: string;
@@ -185,12 +203,6 @@ const ko: Messages = {
     sectionDefi: "DeFi",
     sectionWisdom: "어록",
   },
-  views: {
-    defiPlaceholderTitle: "DeFi 포지션 (준비 중)",
-    defiPlaceholderMsg: "다음 PR에서 디파이/일드파밍 포지션 추적이 들어옵니다.",
-    wisdomPlaceholderTitle: "어록 / 꿀팁 아카이브 (준비 중)",
-    wisdomPlaceholderMsg: "트레이딩 인사이트와 명언을 모아두는 공간이 들어올 예정입니다.",
-  },
   drawer: {
     closeAria: "닫기",
     tradeNoteLabel: "거래 비고",
@@ -241,6 +253,30 @@ const ko: Messages = {
     label: "통합 자산",
     sectorTrading: "거래",
     sectorDefi: "DeFi",
+  },
+  wisdom: {
+    title: "어록 / 꿀팁",
+    newButton: "+ 새로 추가",
+    searchPlaceholder: "검색…",
+    pinFilterLabel: "고정만 보기",
+    allTags: "전체 태그",
+    pinAria: "고정",
+    deleteAria: "삭제",
+    drawerNew: "새 메모",
+    drawerEdit: "메모 편집",
+    bodyLabel: "본문",
+    bodyPlaceholder: "어록, 꿀팁, 인사이트… 자유롭게 적어보세요.",
+    sourceLabel: "출처",
+    sourcePlaceholder: "예: Buffett, 책 제목, URL",
+    tagsLabel: "태그",
+    tagsHint: "콤마로 구분 — 예: 심리, 리스크, 패턴",
+    save: "저장",
+    cancel: "취소",
+    delete: "삭제",
+    deleteConfirm: "이 메모를 삭제할까요?",
+    emptyTitle: "아직 등록된 어록이 없어요",
+    emptyMsg: "+ 새로 추가 버튼을 눌러 첫 어록을 적어보세요. ⌘N 단축키도 됩니다.",
+    noMatches: "검색 결과가 없어요.",
   },
   grid: {
     headerDate: "날짜",
@@ -361,12 +397,6 @@ const en: Messages = {
     sectionDefi: "DeFi",
     sectionWisdom: "Wisdom",
   },
-  views: {
-    defiPlaceholderTitle: "DeFi positions (coming soon)",
-    defiPlaceholderMsg: "Yield-farming and DeFi position tracking lands in the next PR.",
-    wisdomPlaceholderTitle: "Wisdom archive (coming soon)",
-    wisdomPlaceholderMsg: "A place to collect trading insights and quotes is on the way.",
-  },
   drawer: {
     closeAria: "Close",
     tradeNoteLabel: "Trade note",
@@ -417,6 +447,30 @@ const en: Messages = {
     label: "Total assets",
     sectorTrading: "Trading",
     sectorDefi: "DeFi",
+  },
+  wisdom: {
+    title: "Wisdom",
+    newButton: "+ New",
+    searchPlaceholder: "Search…",
+    pinFilterLabel: "Pinned only",
+    allTags: "All tags",
+    pinAria: "Pin",
+    deleteAria: "Delete",
+    drawerNew: "New note",
+    drawerEdit: "Edit note",
+    bodyLabel: "Body",
+    bodyPlaceholder: "A quote, a tip, a personal insight — write freely.",
+    sourceLabel: "Source",
+    sourcePlaceholder: "e.g. Buffett, book title, URL",
+    tagsLabel: "Tags",
+    tagsHint: "Comma-separated — e.g. psychology, risk, pattern",
+    save: "Save",
+    cancel: "Cancel",
+    delete: "Delete",
+    deleteConfirm: "Delete this note?",
+    emptyTitle: "No wisdom notes yet",
+    emptyMsg: "Press + New to add your first note. ⌘N also works.",
+    noMatches: "No matches.",
   },
   grid: {
     headerDate: "Date",

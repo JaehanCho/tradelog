@@ -987,17 +987,6 @@ button {
   color: var(--text-secondary);
 }
 
-.placeholder-view-title {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.placeholder-view-msg {
-  font-size: 13px;
-  max-width: 480px;
-}
-
 /* ───── Day detail drawer ───────────────────────────────────────── */
 
 .day-drawer-overlay {
@@ -1494,4 +1483,190 @@ button {
 .defi-delete {
   color: var(--negative);
   border-color: var(--negative);
+}
+
+/* ───── Wisdom board ───────────────────────────────────────────── */
+
+.wisdom-board {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.wisdom-board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.wisdom-board-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.wisdom-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.wisdom-search {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--separator-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-solid);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.wisdom-search:focus {
+  border-color: var(--accent);
+}
+.wisdom-pin-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.wisdom-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wisdom-tag-chip {
+  appearance: none;
+  background: rgba(127, 127, 127, 0.10);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.wisdom-tag-chip:hover {
+  background: rgba(127, 127, 127, 0.18);
+}
+.wisdom-tag-chip.is-active {
+  background: rgba(0, 122, 255, 0.16);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.wisdom-grid {
+  /* Masonry-style flow with CSS columns. Cards keep their natural
+     height and pack column-by-column without an external lib. */
+  columns: 3;
+  column-gap: 14px;
+}
+@media (max-width: 960px) {
+  .wisdom-grid { columns: 2; }
+}
+@media (max-width: 600px) {
+  .wisdom-grid { columns: 1; }
+}
+
+.wisdom-card {
+  display: block;
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface-elev);
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.05s;
+}
+.wisdom-card:hover {
+  border-color: var(--accent);
+}
+.wisdom-card.is-pinned {
+  border-color: rgba(0, 122, 255, 0.45);
+  background: rgba(0, 122, 255, 0.04);
+}
+
+.wisdom-card-head {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
+}
+.wisdom-pin {
+  appearance: none;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.55;
+}
+.wisdom-pin[aria-pressed="true"] {
+  opacity: 1;
+}
+.wisdom-pin:hover {
+  opacity: 1;
+}
+
+.wisdom-body {
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  color: var(--text-primary);
+}
+
+.wisdom-source {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.wisdom-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+.wisdom-tag {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  background: rgba(127, 127, 127, 0.10);
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+.wisdom-no-matches {
+  padding: 32px;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+.wisdom-drawer {
+  width: min(560px, 95vw);
+}
+
+.wisdom-actions {
+  justify-content: space-between;
+}
+
+.defi-field-input {
+  padding: 8px 10px;
+  border: 1px solid var(--separator-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-solid);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.defi-field-input:focus {
+  border-color: var(--accent);
 }

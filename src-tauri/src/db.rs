@@ -5,12 +5,13 @@ use rusqlite_migration::{Migrations, M};
 use tauri::Manager;
 
 use crate::error::{AppError, AppResult};
-use crate::models::{DefiPosition, DefiSnapshot, TradingDay};
+use crate::models::{DefiPosition, DefiSnapshot, TradingDay, WisdomNote};
 
 const MIGRATION_0001: &str = include_str!("../migrations/0001_initial.sql");
 const MIGRATION_0002: &str = include_str!("../migrations/0002_settings.sql");
 const MIGRATION_0003: &str = include_str!("../migrations/0003_market_note.sql");
 const MIGRATION_0004: &str = include_str!("../migrations/0004_defi.sql");
+const MIGRATION_0005: &str = include_str!("../migrations/0005_wisdom.sql");
 
 pub struct Db {
     conn: Connection,
@@ -33,6 +34,7 @@ impl Db {
             M::up(MIGRATION_0002),
             M::up(MIGRATION_0003),
             M::up(MIGRATION_0004),
+            M::up(MIGRATION_0005),
         ]);
         migrations.to_latest(&mut conn)?;
 
@@ -270,6 +272,43 @@ impl Db {
         Ok(())
     }
 
+    // ─── Wisdom notes ──────────────────────────────────────────────
+
+    pub fn get_wisdom_notes(&self) -> AppResult<Vec<WisdomNote>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, body, source, tags, pinned, created_at, updated_at \
+             FROM wisdom_note \
+             ORDER BY pinned DESC, updated_at DESC",
+        )?;
+        let rows = stmt
+            .query_map([], row_to_wisdom_note)?
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(rows)
+    }
+
+    pub fn upsert_wisdom_note(&mut self, n: &WisdomNote) -> AppResult<()> {
+        self.conn.execute(
+            "INSERT INTO wisdom_note (id, body, source, tags, pinned, updated_at) \
+             VALUES (?1, ?2, ?3, ?4, ?5, strftime('%Y-%m-%dT%H:%M:%fZ','now')) \
+             ON CONFLICT(id) DO UPDATE SET \
+                 body = excluded.body, \
+                 source = excluded.source, \
+                 tags = excluded.tags, \
+                 pinned = excluded.pinned, \
+                 updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')",
+            params![n.id, n.body, n.source, n.tags, n.pinned],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_wisdom_note(&mut self, id: &str) -> AppResult<()> {
+        self.conn.execute(
+            "DELETE FROM wisdom_note WHERE id = ?1",
+            params![id],
+        )?;
+        Ok(())
+    }
+
     /// Atomically replaces the entire `trading_day` table contents with `days`.
     /// Used by undo/redo so that rows that existed only in the redone-away
     /// state actually disappear from disk.
@@ -321,6 +360,18 @@ fn row_to_defi_snapshot(row: &rusqlite::Row<'_>) -> rusqlite::Result<DefiSnapsho
         fees_earned_usd: row.get(4)?,
         note: row.get(5)?,
         created_at: row.get(6)?,
+    })
+}
+
+fn row_to_wisdom_note(row: &rusqlite::Row<'_>) -> rusqlite::Result<WisdomNote> {
+    Ok(WisdomNote {
+        id: row.get(0)?,
+        body: row.get(1)?,
+        source: row.get(2)?,
+        tags: row.get(3)?,
+        pinned: row.get(4)?,
+        created_at: row.get(5)?,
+        updated_at: row.get(6)?,
     })
 }
 
