@@ -18,6 +18,17 @@ export type Messages = {
     wisdomPlaceholderTitle: string;
     wisdomPlaceholderMsg: string;
   };
+  drawer: {
+    closeAria: string;
+    tradeNoteLabel: string;
+    tradeNotePlaceholder: string;
+    marketNoteLabel: string;
+    marketNotePlaceholder: string;
+    pnlLabel: string;
+    cumReturnLabel: string;
+    endBalanceLabel: string;
+    openAria: string;
+  };
   grid: {
     headerDate: string;
     headerDeposit: string;
@@ -141,6 +152,18 @@ const ko: Messages = {
     defiPlaceholderMsg: "다음 PR에서 디파이/일드파밍 포지션 추적이 들어옵니다.",
     wisdomPlaceholderTitle: "어록 / 꿀팁 아카이브 (준비 중)",
     wisdomPlaceholderMsg: "트레이딩 인사이트와 명언을 모아두는 공간이 들어올 예정입니다.",
+  },
+  drawer: {
+    closeAria: "닫기",
+    tradeNoteLabel: "거래 비고",
+    tradeNotePlaceholder: "이 날의 거래 메모 (셀에 기록되는 내용과 동일).",
+    marketNoteLabel: "시장 메모",
+    marketNotePlaceholder:
+      "오늘의 시장 흐름, 뉴스, 가설, 전략 등 자유롭게 기록.",
+    pnlLabel: "일일수익",
+    cumReturnLabel: "누적수익률",
+    endBalanceLabel: "최종금액",
+    openAria: "이 날 상세 보기",
   },
   grid: {
     headerDate: "날짜",
@@ -266,6 +289,18 @@ const en: Messages = {
     defiPlaceholderMsg: "Yield-farming and DeFi position tracking lands in the next PR.",
     wisdomPlaceholderTitle: "Wisdom archive (coming soon)",
     wisdomPlaceholderMsg: "A place to collect trading insights and quotes is on the way.",
+  },
+  drawer: {
+    closeAria: "Close",
+    tradeNoteLabel: "Trade note",
+    tradeNotePlaceholder: "Notes about this day's trades (same as the cell).",
+    marketNoteLabel: "Market note",
+    marketNotePlaceholder:
+      "Free-form thoughts on today's market — news, hypotheses, strategy.",
+    pnlLabel: "Daily PnL",
+    cumReturnLabel: "Cumulative return",
+    endBalanceLabel: "End balance",
+    openAria: "Open day details",
   },
   grid: {
     headerDate: "Date",

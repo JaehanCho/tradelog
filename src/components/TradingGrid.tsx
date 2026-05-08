@@ -12,6 +12,7 @@ import { nextDay, todayKST } from "../lib/dates";
 import { NoteCell } from "./NoteCell";
 import { NoteEditor } from "./NoteEditor";
 import type { ComputedTradingDay } from "../types/trading-day";
+import { DayDetailDrawer } from "./DayDetailDrawer";
 
 const ROW_CLIP_KIND = "tradelog_row_v1";
 type RowClip = {
@@ -21,6 +22,7 @@ type RowClip = {
   end_balance: number | null;
   withdrawal: number;
   note: string;
+  market_note?: string;
 };
 
 const usd = new Intl.NumberFormat("en-US", {
@@ -132,6 +134,7 @@ export function TradingGrid() {
   const [selectedCell, setSelectedCell] = useState<SelectedCell>(null);
   const selectedCellRef = useRef<SelectedCell>(null);
   selectedCellRef.current = selectedCell;
+  const [drawerDate, setDrawerDate] = useState<string | null>(null);
   const t = useT();
 
   const showToast = useCallback((t: Toast) => {
@@ -162,6 +165,7 @@ export function TradingGrid() {
       withdrawal: 0,
       end_balance: null,
       note: "",
+      market_note: "",
     });
   }, [computed, upsertOne]);
 
@@ -265,6 +269,26 @@ export function TradingGrid() {
         renderEditCell: NoteEditor,
       },
       {
+        key: "_open",
+        name: "",
+        width: 36,
+        editable: false,
+        cellClass: "row-actions",
+        renderCell: ({ row }) => (
+          <button
+            className="row-open"
+            title={t.drawer.openAria}
+            aria-label={t.drawer.openAria}
+            onClick={(e) => {
+              e.stopPropagation();
+              setDrawerDate(row.trade_date);
+            }}
+          >
+            ▶
+          </button>
+        ),
+      },
+      {
         key: "_actions",
         name: "",
         width: 44,
@@ -307,6 +331,7 @@ export function TradingGrid() {
             ? null
             : Number(row.end_balance),
         note: row.note ?? "",
+        market_note: row.market_note ?? "",
       };
 
       if (oldDate && oldDate !== row.trade_date) {
@@ -405,6 +430,7 @@ export function TradingGrid() {
         end_balance: row.end_balance ?? null,
         withdrawal: row.withdrawal ?? 0,
         note: row.note ?? "",
+        market_note: row.market_note ?? "",
       };
       try {
         await api.clipboardWrite(JSON.stringify(clip));
@@ -463,6 +489,7 @@ export function TradingGrid() {
             ? null
             : Number(src.end_balance),
         note: String(src.note ?? ""),
+        market_note: String(src.market_note ?? ""),
       });
       showToast({
         kind: "ok",
@@ -514,6 +541,7 @@ export function TradingGrid() {
         withdrawal: updated.withdrawal ?? 0,
         end_balance: updated.end_balance ?? null,
         note: updated.note ?? "",
+        market_note: updated.market_note ?? "",
       };
 
       if (renamedFrom) {
@@ -643,6 +671,13 @@ export function TradingGrid() {
           {toast.msg}
         </div>
       )}
+
+      <DayDetailDrawer
+        row={
+          drawerDate ? rows.find((r) => r.trade_date === drawerDate) ?? null : null
+        }
+        onClose={() => setDrawerDate(null)}
+      />
     </div>
   );
 }

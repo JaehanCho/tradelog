@@ -1,0 +1,1 @@
+ALTER TABLE trading_day ADD COLUMN market_note TEXT NOT NULL DEFAULT '';

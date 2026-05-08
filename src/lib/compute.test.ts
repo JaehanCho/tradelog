@@ -14,6 +14,7 @@ const td = (
   withdrawal,
   end_balance: end,
   note,
+  market_note: "",
 });
 
 describe("computeTradingDays", () => {

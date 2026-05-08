@@ -9,6 +9,7 @@ use crate::models::TradingDay;
 
 const MIGRATION_0001: &str = include_str!("../migrations/0001_initial.sql");
 const MIGRATION_0002: &str = include_str!("../migrations/0002_settings.sql");
+const MIGRATION_0003: &str = include_str!("../migrations/0003_market_note.sql");
 
 pub struct Db {
     conn: Connection,
@@ -26,7 +27,11 @@ impl Db {
         conn.pragma_update(None, "journal_mode", "WAL")?;
         conn.pragma_update(None, "foreign_keys", "ON")?;
 
-        let migrations = Migrations::new(vec![M::up(MIGRATION_0001), M::up(MIGRATION_0002)]);
+        let migrations = Migrations::new(vec![
+            M::up(MIGRATION_0001),
+            M::up(MIGRATION_0002),
+            M::up(MIGRATION_0003),
+        ]);
         migrations.to_latest(&mut conn)?;
 
         Ok(Self { conn })
@@ -34,7 +39,7 @@ impl Db {
 
     pub fn get_all(&self) -> AppResult<Vec<TradingDay>> {
         let mut stmt = self.conn.prepare(
-            "SELECT trade_date, deposit, withdrawal, end_balance, note, created_at, updated_at \
+            "SELECT trade_date, deposit, withdrawal, end_balance, note, market_note, created_at, updated_at \
              FROM trading_day ORDER BY trade_date ASC",
         )?;
         let rows = stmt
@@ -45,7 +50,7 @@ impl Db {
 
     pub fn get_range(&self, from: &str, to: &str) -> AppResult<Vec<TradingDay>> {
         let mut stmt = self.conn.prepare(
-            "SELECT trade_date, deposit, withdrawal, end_balance, note, created_at, updated_at \
+            "SELECT trade_date, deposit, withdrawal, end_balance, note, market_note, created_at, updated_at \
              FROM trading_day WHERE trade_date BETWEEN ?1 AND ?2 ORDER BY trade_date ASC",
         )?;
         let rows = stmt
@@ -56,13 +61,14 @@ impl Db {
 
     pub fn upsert(&mut self, day: &TradingDay) -> AppResult<()> {
         self.conn.execute(
-            "INSERT INTO trading_day (trade_date, deposit, withdrawal, end_balance, note, updated_at) \
-             VALUES (?1, ?2, ?3, ?4, ?5, strftime('%Y-%m-%dT%H:%M:%fZ','now')) \
+            "INSERT INTO trading_day (trade_date, deposit, withdrawal, end_balance, note, market_note, updated_at) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, strftime('%Y-%m-%dT%H:%M:%fZ','now')) \
              ON CONFLICT(trade_date) DO UPDATE SET \
                deposit = excluded.deposit, \
                withdrawal = excluded.withdrawal, \
                end_balance = excluded.end_balance, \
                note = excluded.note, \
+               market_note = excluded.market_note, \
                updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')",
             params![
                 day.trade_date,
@@ -70,6 +76,7 @@ impl Db {
                 day.withdrawal,
                 day.end_balance,
                 day.note,
+                day.market_note,
             ],
         )?;
         Ok(())
@@ -79,13 +86,14 @@ impl Db {
         let tx = self.conn.transaction()?;
         {
             let mut stmt = tx.prepare(
-                "INSERT INTO trading_day (trade_date, deposit, withdrawal, end_balance, note, updated_at) \
-                 VALUES (?1, ?2, ?3, ?4, ?5, strftime('%Y-%m-%dT%H:%M:%fZ','now')) \
+                "INSERT INTO trading_day (trade_date, deposit, withdrawal, end_balance, note, market_note, updated_at) \
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, strftime('%Y-%m-%dT%H:%M:%fZ','now')) \
                  ON CONFLICT(trade_date) DO UPDATE SET \
                    deposit = excluded.deposit, \
                    withdrawal = excluded.withdrawal, \
                    end_balance = excluded.end_balance, \
                    note = excluded.note, \
+                   market_note = excluded.market_note, \
                    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')",
             )?;
             for day in days {
@@ -95,6 +103,7 @@ impl Db {
                     day.withdrawal,
                     day.end_balance,
                     day.note,
+                    day.market_note,
                 ])?;
             }
         }
@@ -149,13 +158,14 @@ impl Db {
             )?;
         }
         tx.execute(
-            "INSERT INTO trading_day (trade_date, deposit, withdrawal, end_balance, note, updated_at) \
-             VALUES (?1, ?2, ?3, ?4, ?5, strftime('%Y-%m-%dT%H:%M:%fZ','now')) \
+            "INSERT INTO trading_day (trade_date, deposit, withdrawal, end_balance, note, market_note, updated_at) \
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, strftime('%Y-%m-%dT%H:%M:%fZ','now')) \
              ON CONFLICT(trade_date) DO UPDATE SET \
                deposit = excluded.deposit, \
                withdrawal = excluded.withdrawal, \
                end_balance = excluded.end_balance, \
                note = excluded.note, \
+               market_note = excluded.market_note, \
                updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')",
             params![
                 day.trade_date,
@@ -163,6 +173,7 @@ impl Db {
                 day.withdrawal,
                 day.end_balance,
                 day.note,
+                day.market_note,
             ],
         )?;
         tx.commit()?;
@@ -177,8 +188,8 @@ impl Db {
         tx.execute("DELETE FROM trading_day", [])?;
         {
             let mut stmt = tx.prepare(
-                "INSERT INTO trading_day (trade_date, deposit, withdrawal, end_balance, note, updated_at) \
-                 VALUES (?1, ?2, ?3, ?4, ?5, strftime('%Y-%m-%dT%H:%M:%fZ','now'))",
+                "INSERT INTO trading_day (trade_date, deposit, withdrawal, end_balance, note, market_note, updated_at) \
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, strftime('%Y-%m-%dT%H:%M:%fZ','now'))",
             )?;
             for day in days {
                 stmt.execute(params![
@@ -187,6 +198,7 @@ impl Db {
                     day.withdrawal,
                     day.end_balance,
                     day.note,
+                    day.market_note,
                 ])?;
             }
         }
@@ -202,7 +214,8 @@ fn row_to_trading_day(row: &rusqlite::Row<'_>) -> rusqlite::Result<TradingDay> {
         withdrawal: row.get(2)?,
         end_balance: row.get(3)?,
         note: row.get(4)?,
-        created_at: row.get(5)?,
-        updated_at: row.get(6)?,
+        market_note: row.get(5)?,
+        created_at: row.get(6)?,
+        updated_at: row.get(7)?,
     })
 }

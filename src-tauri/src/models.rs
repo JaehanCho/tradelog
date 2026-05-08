@@ -14,6 +14,8 @@ pub struct TradingDay {
     #[serde(default)]
     pub note: String,
     #[serde(default)]
+    pub market_note: String,
+    #[serde(default)]
     pub created_at: Option<String>,
     #[serde(default)]
     pub updated_at: Option<String>,

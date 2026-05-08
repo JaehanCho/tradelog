@@ -8,6 +8,8 @@ export interface TradingDay {
   withdrawal: number;
   end_balance: number | null;
   note: string;
+  /** Free-form daily market thoughts, separate from per-trade `note`. */
+  market_note: string;
   created_at?: string;
   updated_at?: string;
 }
