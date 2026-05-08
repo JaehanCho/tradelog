@@ -88,6 +88,9 @@ button {
 .update-toast-error {
   border-left: 3px solid var(--negative);
 }
+.update-toast-ok {
+  border-left: 3px solid var(--positive);
+}
 
 .sidebar-header {
   font-weight: 600;

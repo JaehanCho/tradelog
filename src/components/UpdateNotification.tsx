@@ -6,39 +6,43 @@ type Status =
   | { kind: "idle" }
   | { kind: "checking" }
   | { kind: "available"; update: Update }
-  | { kind: "uptodate" }
+  | { kind: "uptodate"; showBanner: boolean }
   | { kind: "error"; message: string }
   | { kind: "installing" };
 
 export function UpdateNotification() {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
 
-  const runCheck = useCallback(async () => {
+  const runCheck = useCallback(async (manual = false) => {
     setStatus({ kind: "checking" });
     try {
       const u = await check();
       if (u) {
-        // eslint-disable-next-line no-console
         console.log("[updater] update available:", u.version);
         setStatus({ kind: "available", update: u });
       } else {
-        // eslint-disable-next-line no-console
         console.log("[updater] no update available");
-        setStatus({ kind: "uptodate" });
+        setStatus({ kind: "uptodate", showBanner: manual });
+        if (manual) {
+          window.setTimeout(
+            () => setStatus({ kind: "uptodate", showBanner: false }),
+            3500,
+          );
+        }
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      // eslint-disable-next-line no-console
       console.error("[updater] check failed:", e);
       setStatus({ kind: "error", message });
     }
   }, []);
 
-  // Auto-check on mount.
+  // Auto-check on mount (silent).
   useEffect(() => {
-    void runCheck();
-    // also expose it on window for quick devtools poking
-    (window as unknown as { __tradelogCheckUpdate?: () => Promise<void> }).__tradelogCheckUpdate = runCheck;
+    void runCheck(false);
+    (
+      window as unknown as { __tradelogCheckUpdate?: (manual?: boolean) => Promise<void> }
+    ).__tradelogCheckUpdate = (manual?: boolean) => runCheck(manual ?? true);
   }, [runCheck]);
 
   const install = useCallback(async () => {
@@ -57,7 +61,19 @@ export function UpdateNotification() {
   }, [status]);
 
   if (status.kind === "idle" || status.kind === "checking") return null;
-  if (status.kind === "uptodate") return null; // silent on success — no banner
+  if (status.kind === "uptodate" && !status.showBanner) return null;
+
+  if (status.kind === "uptodate" && status.showBanner) {
+    return (
+      <div className="update-toast update-toast-ok" role="status">
+        <div className="update-toast-body">
+          <div className="update-toast-title">최신 버전을 사용 중이에요</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status.kind === "uptodate") return null; // showBanner=false fallthrough
 
   if (status.kind === "available" || status.kind === "installing") {
     const u = status.kind === "available" ? status.update : null;
@@ -72,7 +88,7 @@ export function UpdateNotification() {
         <div className="update-toast-actions">
           <button
             className="btn btn-secondary"
-            onClick={() => setStatus({ kind: "uptodate" })}
+            onClick={() => setStatus({ kind: "uptodate", showBanner: false })}
             disabled={status.kind === "installing"}
           >
             나중에
@@ -102,7 +118,7 @@ export function UpdateNotification() {
         </button>
         <button
           className="btn btn-primary"
-          onClick={() => setStatus({ kind: "uptodate" })}
+          onClick={() => setStatus({ kind: "uptodate", showBanner: false })}
         >
           닫기
         </button>
