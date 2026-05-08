@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSettings } from "../hooks/useSettings";
 import { useTradingDays } from "../hooks/useTradingDays";
+import { useT } from "../i18n";
 
 const usd = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -13,6 +14,7 @@ export function GoalProgress() {
   const goalDate = useSettings((s) => s.goalDate);
   const setGoal = useSettings((s) => s.setGoal);
   const computed = useTradingDays((s) => s.computed);
+  const t = useT();
 
   const last = [...computed]
     .reverse()
@@ -37,7 +39,7 @@ export function GoalProgress() {
     <div className="goal-progress">
       <div className="goal-progress-header">
         <span className="goal-progress-label">
-          목표 {usd.format(goalBalance)} @ {goalDate}
+          {t.goal.label(usd.format(goalBalance), goalDate)}
         </span>
         <button
           className="goal-progress-edit"
@@ -47,7 +49,7 @@ export function GoalProgress() {
             setEditing(true);
           }}
         >
-          수정
+          {t.goal.edit}
         </button>
       </div>
       <div className="goal-progress-bar">
@@ -57,8 +59,10 @@ export function GoalProgress() {
         />
       </div>
       <div className="goal-progress-meta">
-        <span>{(progress * 100).toFixed(1)}% 달성</span>
-        <span>{usd.format(Math.max(0, goalBalance - balance))} 남음</span>
+        <span>{t.goal.achieved((progress * 100).toFixed(1))}</span>
+        <span>
+          {t.goal.remaining(usd.format(Math.max(0, goalBalance - balance)))}
+        </span>
       </div>
 
       {editing && (
@@ -67,9 +71,9 @@ export function GoalProgress() {
             className="goal-edit-modal"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="goal-edit-title">목표 설정</div>
+            <div className="goal-edit-title">{t.goal.title}</div>
             <label className="goal-edit-row">
-              <span>목표 잔액 (USD)</span>
+              <span>{t.goal.targetBalance}</span>
               <input
                 type="number"
                 step="any"
@@ -79,7 +83,7 @@ export function GoalProgress() {
               />
             </label>
             <label className="goal-edit-row">
-              <span>목표 날짜</span>
+              <span>{t.goal.targetDate}</span>
               <input
                 type="date"
                 value={draftDate}
@@ -91,10 +95,10 @@ export function GoalProgress() {
                 className="btn btn-secondary"
                 onClick={() => setEditing(false)}
               >
-                취소
+                {t.goal.cancel}
               </button>
               <button className="btn btn-primary" onClick={save}>
-                저장
+                {t.goal.save}
               </button>
             </div>
           </div>

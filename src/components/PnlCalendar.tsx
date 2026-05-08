@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTradingDays } from "../hooks/useTradingDays";
+import { useT } from "../i18n";
 
 const usd = new Intl.NumberFormat("en-US", {
   signDisplay: "exceptZero",
@@ -12,8 +13,6 @@ const fmtCompact = (v: number): string => {
   return usd.format(v);
 };
 
-const KOR_DAYS = ["일", "월", "화", "수", "목", "금", "토"];
-
 function shiftMonth(ym: string, delta: number): string {
   const [y, m] = ym.split("-").map(Number);
   const d = new Date(Date.UTC(y, m - 1 + delta, 1));
@@ -24,6 +23,7 @@ export function PnlCalendar() {
   const computed = useTradingDays((s) => s.computed);
   const monthFilter = useTradingDays((s) => s.monthFilter);
   const setMonthFilter = useTradingDays((s) => s.setMonthFilter);
+  const t = useT();
 
   // Default the calendar to the sidebar filter month, or the latest data
   // month, or current KST month.
@@ -73,7 +73,7 @@ export function PnlCalendar() {
       <div className="calendar-header">
         <button
           className="calendar-nav"
-          aria-label="이전 달"
+          aria-label={t.calendar.prevMonth}
           onClick={() => setViewMonth(shiftMonth(viewMonth, -1))}
         >
           ◀
@@ -83,13 +83,13 @@ export function PnlCalendar() {
             monthFilter === viewMonth ? "active" : ""
           }`}
           onClick={onMonthClick}
-          title="클릭해서 grid를 이 월로 필터"
+          title={t.calendar.monthFilterTitle}
         >
           {viewMonth}
         </button>
         <button
           className="calendar-nav"
-          aria-label="다음 달"
+          aria-label={t.calendar.nextMonth}
           onClick={() => setViewMonth(shiftMonth(viewMonth, 1))}
         >
           ▶
@@ -97,7 +97,7 @@ export function PnlCalendar() {
       </div>
 
       <div className="calendar-weekdays">
-        {KOR_DAYS.map((d, i) => (
+        {t.calendar.weekdays.map((d, i) => (
           <div
             key={d}
             className={`calendar-weekday ${i === 0 ? "sun" : ""} ${i === 6 ? "sat" : ""}`}

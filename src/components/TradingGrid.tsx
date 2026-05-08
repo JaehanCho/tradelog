@@ -6,6 +6,7 @@ import DataGrid, {
 import "react-data-grid/lib/styles.css";
 
 import { useTradingDays } from "../hooks/useTradingDays";
+import { useT } from "../i18n";
 import { api } from "../lib/api";
 import { nextDay, todayKST } from "../lib/dates";
 import { NoteCell } from "./NoteCell";
@@ -131,6 +132,7 @@ export function TradingGrid() {
   const [selectedCell, setSelectedCell] = useState<SelectedCell>(null);
   const selectedCellRef = useRef<SelectedCell>(null);
   selectedCellRef.current = selectedCell;
+  const t = useT();
 
   const showToast = useCallback((t: Toast) => {
     setToast(t);
@@ -174,14 +176,14 @@ export function TradingGrid() {
     () => [
       {
         key: "trade_date",
-        name: "날짜",
+        name: t.grid.headerDate,
         width: 130,
         editable: true,
         renderEditCell: dateEditor,
       },
       {
         key: "deposit",
-        name: "입금",
+        name: t.grid.headerDeposit,
         width: 110,
         editable: true,
         renderCell: ({ row }) => <span>{fmtNum(row.deposit)}</span>,
@@ -189,7 +191,7 @@ export function TradingGrid() {
       },
       {
         key: "start_balance",
-        name: "시작금액",
+        name: t.grid.headerStart,
         width: 130,
         editable: (row) => rows[0]?.trade_date === row.trade_date,
         renderCell: ({ row }) => (
@@ -205,7 +207,7 @@ export function TradingGrid() {
       },
       {
         key: "end_balance",
-        name: "최종금액",
+        name: t.grid.headerEnd,
         width: 130,
         editable: true,
         renderCell: ({ row }) => <span>{fmtNum(row.end_balance)}</span>,
@@ -213,7 +215,7 @@ export function TradingGrid() {
       },
       {
         key: "daily_pnl",
-        name: "일일수익",
+        name: t.grid.headerDailyPnl,
         width: 120,
         editable: false,
         renderCell: ({ row }) => (
@@ -224,7 +226,7 @@ export function TradingGrid() {
       },
       {
         key: "daily_return_pct",
-        name: "일별수익률",
+        name: t.grid.headerDailyReturn,
         width: 110,
         editable: false,
         renderCell: ({ row }) => (
@@ -235,7 +237,7 @@ export function TradingGrid() {
       },
       {
         key: "cumulative_return_pct",
-        name: "누적수익률",
+        name: t.grid.headerCumReturn,
         width: 120,
         editable: false,
         renderCell: ({ row }) => (
@@ -248,7 +250,7 @@ export function TradingGrid() {
       },
       {
         key: "withdrawal",
-        name: "출금",
+        name: t.grid.headerWithdrawal,
         width: 110,
         editable: true,
         renderCell: ({ row }) => <span>{fmtNum(row.withdrawal)}</span>,
@@ -256,7 +258,7 @@ export function TradingGrid() {
       },
       {
         key: "note",
-        name: "비고",
+        name: t.grid.headerNote,
         minWidth: 240,
         editable: true,
         renderCell: ({ row }) => <NoteCell note={row.note ?? ""} />,
@@ -271,7 +273,7 @@ export function TradingGrid() {
         renderCell: ({ row }) => (
           <button
             className="row-delete"
-            title="이 거래일 삭제"
+            title={t.grid.deleteRowTitle}
             onClick={(e) => {
               e.stopPropagation();
               deleteRow(row.trade_date);
@@ -282,7 +284,7 @@ export function TradingGrid() {
         ),
       },
     ],
-    [rows, deleteRow],
+    [rows, deleteRow, t],
   );
 
   const onRowsChange = useCallback(
@@ -318,14 +320,14 @@ export function TradingGrid() {
         if (overwrote) {
           showToast({
             kind: "ok",
-            msg: `${row.trade_date} 행 덮어씀 (⌘Z로 복구)`,
+            msg: t.toast.overwrote(row.trade_date),
           });
         }
       } else {
         void upsertOne(payload);
       }
     },
-    [rows, computed, renameDay, upsertOne, showToast],
+    [rows, computed, renameDay, upsertOne, showToast, t],
   );
 
   // Cmd+Z / Cmd+Shift+Z + Cmd+C / Cmd+V on selected cell.
@@ -368,7 +370,7 @@ export function TradingGrid() {
           if (!EDITABLE_COLS.has(sel.columnKey)) {
             showToast({
               kind: "warn",
-              msg: "이 컬럼은 자동 계산되어서 paste 불가",
+              msg: t.toast.notEditable,
             });
             return;
           }
@@ -376,7 +378,7 @@ export function TradingGrid() {
           try {
             text = (await api.clipboardRead()).trim();
           } catch {
-            showToast({ kind: "warn", msg: "클립보드 읽기 실패" });
+            showToast({ kind: "warn", msg: t.toast.clipboardReadFail });
             return;
           }
           await applyCellPaste(row, sel.columnKey, text);
@@ -389,9 +391,9 @@ export function TradingGrid() {
       const text = raw === null || raw === undefined ? "" : String(raw);
       try {
         await api.clipboardWrite(text);
-        showToast({ kind: "ok", msg: "복사됨" });
+        showToast({ kind: "ok", msg: t.toast.copied });
       } catch {
-        showToast({ kind: "warn", msg: "복사 실패" });
+        showToast({ kind: "warn", msg: t.toast.copyFail });
       }
     }
 
@@ -406,9 +408,9 @@ export function TradingGrid() {
       };
       try {
         await api.clipboardWrite(JSON.stringify(clip));
-        showToast({ kind: "ok", msg: "행 전체 복사됨" });
+        showToast({ kind: "ok", msg: t.toast.rowCopied });
       } catch {
-        showToast({ kind: "warn", msg: "복사 실패" });
+        showToast({ kind: "warn", msg: t.toast.copyFail });
       }
     }
 
@@ -417,7 +419,7 @@ export function TradingGrid() {
       try {
         raw = (await api.clipboardRead()).trim();
       } catch {
-        showToast({ kind: "warn", msg: "클립보드 읽기 실패" });
+        showToast({ kind: "warn", msg: t.toast.clipboardReadFail });
         return;
       }
       let parsed: unknown;
@@ -426,7 +428,7 @@ export function TradingGrid() {
       } catch {
         showToast({
           kind: "warn",
-          msg: "행 데이터가 없어. ⌘⇧C로 복사하고 다시 시도해.",
+          msg: t.toast.noRowData,
         });
         return;
       }
@@ -437,13 +439,13 @@ export function TradingGrid() {
       ) {
         showToast({
           kind: "warn",
-          msg: "행 데이터가 없어. ⌘⇧C로 복사하고 다시 시도해.",
+          msg: t.toast.noRowData,
         });
         return;
       }
       const src = parsed as RowClip;
       if (!/^\d{4}-\d{2}-\d{2}$/.test(src.trade_date)) {
-        showToast({ kind: "warn", msg: "복사된 행의 날짜가 이상함" });
+        showToast({ kind: "warn", msg: t.toast.invalidRowDate });
         return;
       }
       // Always duplicate (never destroy). If src's date is already taken,
@@ -466,8 +468,8 @@ export function TradingGrid() {
         kind: "ok",
         msg:
           date === src.trade_date
-            ? `행 복사 → ${date}`
-            : `${src.trade_date} 자리 차서 → ${date} 에 복사`,
+            ? t.toast.rowDuplicated(date)
+            : t.toast.rowDuplicatedShifted(src.trade_date, date),
       });
     }
 
@@ -482,7 +484,7 @@ export function TradingGrid() {
       if (col === "trade_date") {
         const iso = text.match(/^\d{4}-\d{2}-\d{2}$/)?.[0];
         if (!iso) {
-          showToast({ kind: "warn", msg: "날짜 형식은 YYYY-MM-DD" });
+          showToast({ kind: "warn", msg: t.toast.invalidDateFormat });
           return;
         }
         if (iso === row.trade_date) return;
@@ -494,7 +496,7 @@ export function TradingGrid() {
         const cleaned = text.replace(/[$,\s]/g, "");
         const n = Number(cleaned);
         if (cleaned !== "" && !Number.isFinite(n)) {
-          showToast({ kind: "warn", msg: "숫자만 paste 가능" });
+          showToast({ kind: "warn", msg: t.toast.numbersOnly });
           return;
         }
         if (col === "end_balance") {
@@ -524,18 +526,18 @@ export function TradingGrid() {
         showToast({
           kind: "ok",
           msg: overwrote
-            ? `${updated.trade_date} 행 덮어씀 (⌘Z로 복구)`
-            : "붙여넣음",
+            ? t.toast.overwrote(updated.trade_date)
+            : t.toast.pasted,
         });
       } else {
         await upsertOne(payload);
-        showToast({ kind: "ok", msg: "붙여넣음" });
+        showToast({ kind: "ok", msg: t.toast.pasted });
       }
     }
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [undo, redo, rows, computed, renameDay, upsertOne, showToast]);
+  }, [undo, redo, rows, computed, renameDay, upsertOne, showToast, t]);
 
   return (
     <div ref={containerRef} className="trading-grid" tabIndex={0}>
@@ -543,12 +545,13 @@ export function TradingGrid() {
         <div className="grid-hint">
           {monthFilter ? (
             <>
-              <strong>{monthFilter}</strong> 만 보는 중
+              <strong>{monthFilter}</strong>
+              {t.grid.filteringPrefix}
               <button
                 className="grid-filter-clear"
                 onClick={() => setMonthFilter(null)}
               >
-                전체 보기
+                {t.grid.filterClear}
               </button>
             </>
           ) : (
@@ -560,7 +563,7 @@ export function TradingGrid() {
               <button
                 type="button"
                 className="grid-hint-icon"
-                aria-label="단축키 도움말"
+                aria-label={t.grid.hint.ariaLabel}
                 onClick={() => setHintOpen((o) => !o)}
                 onFocus={() => setHintOpen(true)}
                 onBlur={() => setHintOpen(false)}
@@ -571,23 +574,23 @@ export function TradingGrid() {
                 <div className="grid-hint-popover" role="tooltip">
                   <div className="grid-hint-row">
                     <kbd>⌘C</kbd> <kbd>⌘V</kbd>
-                    <span>셀 단위 복사/붙여넣기</span>
+                    <span>{t.grid.hint.copyCell}</span>
                   </div>
                   <div className="grid-hint-row">
                     <kbd>⌘⇧C</kbd> <kbd>⌘⇧V</kbd>
-                    <span>행 단위 복사/붙여넣기</span>
+                    <span>{t.grid.hint.copyRow}</span>
                   </div>
                   <div className="grid-hint-row">
-                    <kbd>더블클릭</kbd>
-                    <span>셀 편집</span>
+                    <kbd>{t.grid.hint.doubleClick}</kbd>
+                    <span>{t.grid.hint.editCell}</span>
                   </div>
                   <div className="grid-hint-row">
                     <kbd>⌘Z</kbd>
-                    <span>실행 취소</span>
+                    <span>{t.grid.hint.undo}</span>
                   </div>
                   <div className="grid-hint-row">
                     <kbd>✕</kbd>
-                    <span>행 삭제 (행 끝)</span>
+                    <span>{t.grid.hint.deleteRow}</span>
                   </div>
                 </div>
               )}
@@ -595,7 +598,7 @@ export function TradingGrid() {
           )}
         </div>
         <button className="btn btn-primary btn-sm" onClick={addRow}>
-          + 거래일 추가
+          {t.grid.addDay}
         </button>
       </div>
 
@@ -603,17 +606,20 @@ export function TradingGrid() {
         <div className="grid-empty">
           <div className="grid-empty-title">
             {monthFilter
-              ? `${monthFilter} 에 데이터가 없어요`
-              : "아직 거래 데이터가 없어요"}
+              ? t.grid.emptyTitleMonth(monthFilter)
+              : t.grid.emptyTitleAll}
           </div>
           <div className="grid-empty-msg">
-            "+ 첫 거래일 추가"로 행을 만들고, 셀을 더블클릭해서 입력해.
+            {t.grid.emptyMsgPart1}
             <br />
-            첫 거래일에는 <strong>시작금액</strong> 또는 <strong>입금</strong>{" "}
-            칸에 시작 자본금을 넣으면 돼.
+            {t.grid.emptyMsgPart2Before}
+            <strong>{t.grid.emptyMsgStart}</strong>
+            {t.grid.emptyMsgPart2Mid}
+            <strong>{t.grid.emptyMsgDeposit}</strong>
+            {t.grid.emptyMsgPart2After}
           </div>
           <button className="btn btn-primary" onClick={addRow}>
-            + 첫 거래일 추가
+            {t.grid.addFirstDay}
           </button>
         </div>
       ) : (

@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useT } from "../i18n";
 
 /**
  * Note cell renderer — keeps row height uniform by showing a single line, but
@@ -10,6 +11,7 @@ export function NoteCell({ note }: { note: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [hover, setHover] = useState(false);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  const t = useT();
 
   const trimmed = note ?? "";
   const hasMultiline = trimmed.includes("\n");
@@ -37,7 +39,10 @@ export function NoteCell({ note }: { note: string }) {
       >
         <span className="note-cell-text">{firstLine}</span>
         {hasMultiline && (
-          <span className="note-multiline-badge" aria-label={`${extraLines}줄 더`}>
+          <span
+            className="note-multiline-badge"
+            aria-label={t.note.moreLines(extraLines)}
+          >
             +{extraLines}
           </span>
         )}

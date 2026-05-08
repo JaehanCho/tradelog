@@ -49,6 +49,8 @@ That's TradeLog.
 - **🔒 Local-first** — All data lives in
   `~/Library/Application Support/com.tradelog.app/db.sqlite`. You own it.
   Back it up, sync it via iCloud, do whatever.
+- **🌐 Bilingual** — Switch between **KO / EN** from the sidebar at any time.
+  Choice is persisted in the local DB and survives restarts.
 
 ## Install
 
@@ -145,6 +147,14 @@ pnpm tauri build   # produces .app + .dmg under src-tauri/target/...
   `rename_or_upsert` for date PK changes (no silent merges).
 - **State**: Zustand store with a 50-step undo history; every mutation pushes
   a snapshot, undo replays it via `replace_all_trading_days`.
+
+## Languages
+
+TradeLog ships with **Korean** and **English**. Toggle from the sidebar
+footer (segmented `KO | EN` control). Adding a third locale takes about ten
+minutes — see `src/i18n/messages.ts`. The bundle's TypeScript shape is
+inferred from the type declaration; missing keys fail compilation, so a new
+locale can't drift out of sync silently.
 
 ## Tech stack
 

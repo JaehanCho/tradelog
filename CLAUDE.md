@@ -100,6 +100,27 @@ If a change is purely internal (refactor, dep bump, build-config tweak)
 with no user-visible delta, no README update is required — but say so
 explicitly in the commit body so it's clear the omission was deliberate.
 
+## i18n
+
+All user-visible strings live in **`src/i18n/messages.ts`** as a typed
+`Messages` object. The `ko` bundle is the source of truth; the `en` bundle
+must satisfy the same `Messages` type — TS will fail the build if a key is
+missing. Components access translations via `useT()` from `src/i18n/index.ts`,
+and the active locale is persisted to `app_setting.locale` via Zustand store
+(`useLocaleStore`).
+
+When adding a new user-visible string:
+
+1. Add it to the `Messages` type, then `ko` and `en` (TS will guide you).
+2. Use `t.<group>.<key>` in the component (`const t = useT();`).
+3. Avoid concatenating translated fragments with raw JSX — use a function
+   leaf (e.g. `overwrote: (date) => \`...\`,`) when interpolation is needed.
+4. Don't translate inside `Intl.NumberFormat` strings — currency stays
+   `en-US`, dates stay ISO. Only UI copy translates.
+
+To add a new language: create a third entry in `messages.ts`, append the
+locale code to the `Locale` union, and surface it in `LanguageToggle.tsx`.
+
 ## Release flow (auto-update)
 
 Standing authorization (per user, GH Actions secrets pre-registered):

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { useTradingDays } from "../hooks/useTradingDays";
+import { useT } from "../i18n";
+import { LanguageToggle } from "./LanguageToggle";
 import { triggerUpdateCheck } from "./UpdateNotification";
 
 export function Sidebar() {
@@ -8,6 +10,7 @@ export function Sidebar() {
   const monthFilter = useTradingDays((s) => s.monthFilter);
   const setMonthFilter = useTradingDays((s) => s.setMonthFilter);
   const [version, setVersion] = useState<string>("");
+  const t = useT();
 
   useEffect(() => {
     getVersion()
@@ -27,15 +30,15 @@ export function Sidebar() {
         <span className="sidebar-title">TradeLog</span>
       </div>
       <nav className="sidebar-nav">
-        <div className="sidebar-section-label">월별</div>
+        <div className="sidebar-section-label">{t.sidebar.monthLabel}</div>
         <button
           className={`sidebar-link ${monthFilter === null ? "active" : ""}`}
           onClick={() => setMonthFilter(null)}
         >
-          전체
+          {t.sidebar.all}
         </button>
         {months.length === 0 && (
-          <div className="sidebar-empty">데이터 없음</div>
+          <div className="sidebar-empty">{t.sidebar.noData}</div>
         )}
         {months.map((m) => (
           <button
@@ -48,13 +51,14 @@ export function Sidebar() {
         ))}
       </nav>
       <div className="sidebar-footer">
+        <LanguageToggle />
         <span className="sidebar-version">{version ? `v${version}` : ""}</span>
         <button
           className="sidebar-update-link"
           onClick={() => triggerUpdateCheck()}
-          title="GitHub Releases에서 새 버전 확인"
+          title={t.sidebar.updateCheckTitle}
         >
-          업데이트 확인
+          {t.sidebar.updateCheck}
         </button>
       </div>
     </aside>

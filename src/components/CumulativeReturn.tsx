@@ -1,4 +1,5 @@
 import { useTradingDays } from "../hooks/useTradingDays";
+import { useT } from "../i18n";
 
 const pct = new Intl.NumberFormat("ko-KR", {
   style: "percent",
@@ -8,6 +9,7 @@ const pct = new Intl.NumberFormat("ko-KR", {
 
 export function CumulativeReturn() {
   const computed = useTradingDays((s) => s.computed);
+  const t = useT();
   const last = [...computed]
     .reverse()
     .find((r) => r.cumulative_return_pct !== null);
@@ -16,7 +18,7 @@ export function CumulativeReturn() {
 
   return (
     <div className="cumulative-return">
-      <div className="cumulative-return-label">누적 수익률</div>
+      <div className="cumulative-return-label">{t.cumulativeReturn.label}</div>
       <div
         className={`cumulative-return-value ${
           positive ? "positive" : "negative"

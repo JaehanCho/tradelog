@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { useSettings } from "../hooks/useSettings";
 import { useTradingDays } from "../hooks/useTradingDays";
+import { useT } from "../i18n";
 
 const usd = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -22,6 +23,7 @@ export function EquityCurve() {
   const computed = useTradingDays((s) => s.computed);
   const goalBalance = useSettings((s) => s.goalBalance);
   const goalDate = useSettings((s) => s.goalDate);
+  const t = useT();
 
   const data = useMemo(
     () =>
@@ -35,7 +37,7 @@ export function EquityCurve() {
     return (
       <div className="equity-empty">
         <div className="equity-empty-frame" />
-        <div className="equity-empty-msg">데이터를 입력해주세요</div>
+        <div className="equity-empty-msg">{t.equity.empty}</div>
       </div>
     );
   }
@@ -76,7 +78,10 @@ export function EquityCurve() {
           stroke="var(--accent-secondary)"
           strokeDasharray="4 4"
           label={{
-            value: `목표 ${usd.format(goalBalance)} @ ${goalDate.slice(0, 7)}`,
+            value: t.equity.goalLabel(
+              usd.format(goalBalance),
+              goalDate.slice(0, 7),
+            ),
             position: "insideTopRight",
             fill: "var(--text-secondary)",
             fontSize: 11,

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
+import { messages, useLocaleStore } from "../i18n";
 
 type Status =
   | { kind: "idle" }
@@ -12,6 +13,8 @@ type Status =
 
 export function UpdateNotification() {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
+  const locale = useLocaleStore((s) => s.locale);
+  const t = messages[locale];
 
   const runCheck = useCallback(async (manual = false) => {
     setStatus({ kind: "checking" });
@@ -56,9 +59,9 @@ export function UpdateNotification() {
       const message = e instanceof Error ? e.message : String(e);
       // eslint-disable-next-line no-console
       console.error("[updater] install failed:", e);
-      setStatus({ kind: "error", message: `설치 실패: ${message}` });
+      setStatus({ kind: "error", message: t.update.installFailed(message) });
     }
-  }, [status]);
+  }, [status, t]);
 
   if (status.kind === "idle" || status.kind === "checking") return null;
   if (status.kind === "uptodate" && !status.showBanner) return null;
@@ -67,7 +70,7 @@ export function UpdateNotification() {
     return (
       <div className="update-toast update-toast-ok" role="status">
         <div className="update-toast-body">
-          <div className="update-toast-title">최신 버전을 사용 중이에요</div>
+          <div className="update-toast-title">{t.update.upToDate}</div>
         </div>
       </div>
     );
@@ -81,7 +84,7 @@ export function UpdateNotification() {
       <div className="update-toast">
         <div className="update-toast-body">
           <div className="update-toast-title">
-            새 버전 {u?.version} 사용 가능
+            {t.update.available(u?.version ?? "")}
           </div>
           {u?.body && <div className="update-toast-msg">{u.body}</div>}
         </div>
@@ -91,14 +94,14 @@ export function UpdateNotification() {
             onClick={() => setStatus({ kind: "uptodate", showBanner: false })}
             disabled={status.kind === "installing"}
           >
-            나중에
+            {t.update.later}
           </button>
           <button
             className="btn btn-primary"
             disabled={status.kind === "installing"}
             onClick={install}
           >
-            {status.kind === "installing" ? "설치 중…" : "지금 업데이트"}
+            {status.kind === "installing" ? t.update.installing : t.update.installNow}
           </button>
         </div>
       </div>
@@ -109,18 +112,18 @@ export function UpdateNotification() {
   return (
     <div className="update-toast update-toast-error" role="alert">
       <div className="update-toast-body">
-        <div className="update-toast-title">업데이트 확인 실패</div>
+        <div className="update-toast-title">{t.update.checkFailed}</div>
         <div className="update-toast-msg">{status.message}</div>
       </div>
       <div className="update-toast-actions">
         <button className="btn btn-secondary" onClick={() => void runCheck()}>
-          다시 시도
+          {t.update.retry}
         </button>
         <button
           className="btn btn-primary"
           onClick={() => setStatus({ kind: "uptodate", showBanner: false })}
         >
-          닫기
+          {t.update.close}
         </button>
       </div>
     </div>

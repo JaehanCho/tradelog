@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useTradingDays } from "../hooks/useTradingDays";
+import { useT } from "../i18n";
 
 const usd = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -17,6 +18,7 @@ const pct = new Intl.NumberFormat("ko-KR", {
 export function MonthlyStats() {
   const computed = useTradingDays((s) => s.computed);
   const monthFilter = useTradingDays((s) => s.monthFilter);
+  const t = useT();
 
   const stats = useMemo(() => {
     const rows = (
@@ -41,7 +43,9 @@ export function MonthlyStats() {
     return { total, winRate, avg, count: rows.length, wins, losses, periodReturn };
   }, [computed, monthFilter]);
 
-  const label = monthFilter ? `${monthFilter} 통계` : "전체 통계";
+  const label = monthFilter
+    ? t.monthStats.statsMonth(monthFilter)
+    : t.monthStats.statsAll;
 
   const sign = (v: number) => (v > 0 ? "positive" : v < 0 ? "negative" : "");
 
@@ -49,34 +53,36 @@ export function MonthlyStats() {
     <section className="month-stats">
       <div className="month-stats-header">
         <span className="month-stats-label">{label}</span>
-        <span className="month-stats-count">{stats.count} 거래일</span>
+        <span className="month-stats-count">
+          {t.monthStats.tradingDays(stats.count)}
+        </span>
       </div>
       <div className="month-stats-grid">
         <div className="stat-card">
-          <div className="stat-card-label">총 PnL</div>
+          <div className="stat-card-label">{t.monthStats.totalPnl}</div>
           <div className={`stat-card-value ${sign(stats.total)}`}>
             {usd.format(stats.total)}
           </div>
           <div className={`stat-card-sub ${sign(stats.periodReturn)}`}>
-            {pct.format(stats.periodReturn)} 대비 시작잔고
+            {pct.format(stats.periodReturn)} {t.monthStats.vsStart}
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-card-label">승률</div>
+          <div className="stat-card-label">{t.monthStats.winRate}</div>
           <div className="stat-card-value">
             {(stats.winRate * 100).toFixed(1)}%
           </div>
           <div className="stat-card-sub">
-            <span className="positive">{stats.wins}승</span>{" "}
-            <span className="negative">{stats.losses}패</span>
+            <span className="positive">{t.monthStats.wins(stats.wins)}</span>{" "}
+            <span className="negative">{t.monthStats.losses(stats.losses)}</span>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-card-label">평균 일수익</div>
+          <div className="stat-card-label">{t.monthStats.avgDaily}</div>
           <div className={`stat-card-value ${sign(stats.avg)}`}>
             {usd.format(stats.avg)}
           </div>
-          <div className="stat-card-sub">/ 거래일</div>
+          <div className="stat-card-sub">{t.monthStats.perDay}</div>
         </div>
       </div>
     </section>
