@@ -1,59 +1,202 @@
+<div align="center">
+
+<img src="src-tauri/icons/128x128@2x.png" width="120" alt="TradeLog" />
+
 # TradeLog
 
-macOS-native trading journal. Tauri 2 + React 18 + TypeScript + SQLite.
+**A native macOS trading journal that just gets out of your way.**
 
-## Stack
+Daily PnL, monthly calendar, equity curve, goal tracking — local-first, signed
+auto-updates, no cloud.
 
-- **Shell:** Tauri 2 (Rust) — macOS only
-- **Frontend:** React 18 + Vite + TypeScript
-- **Storage:** SQLite (`rusqlite` bundled) at `~/Library/Application Support/com.tradelog.app/db.sqlite`
-- **Grid:** `react-data-grid` with custom multi-row TSV paste
-- **Chart:** Recharts (`AreaChart` + `ReferenceLine`)
-- **State:** Zustand
-- **Auto-update:** `tauri-plugin-updater` against GitHub Releases
+[![Platform](https://img.shields.io/badge/platform-macOS%2011%2B-black?logo=apple)](#install)
+[![Tauri 2](https://img.shields.io/badge/Tauri-2.x-24C8DB?logo=tauri&logoColor=white)](https://tauri.app)
+[![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev)
+[![Latest Release](https://img.shields.io/github/v/release/JaehanCho/tradelog?label=latest&color=blue)](https://github.com/JaehanCho/tradelog/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/JaehanCho/tradelog/total?color=brightgreen)](https://github.com/JaehanCho/tradelog/releases)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+[Install](#install) · [Features](#features) · [Shortcuts](#keyboard-shortcuts) · [Develop](#develop) · [Roadmap](#roadmap)
+
+</div>
+
+---
+
+## Why
+
+Spreadsheets eat your willpower. Notion is for product managers. Excel
+hijacks your fonts. You want one app that opens in 0.3 seconds, takes a
+deposit, an end balance, and a one-line note — and never asks you to log in.
+
+That's TradeLog.
+
+## Features
+
+- **🍎 macOS-native** — Real Tauri 2 binary, vibrancy sidebar, system colors,
+  proper dark mode. No Electron tax.
+- **📅 PnL calendar** — Binance-style heatmap. Green days, red days, see
+  your month at a glance.
+- **📈 Equity curve** — Recharts-powered area chart with a goal reference
+  line. Watch the line go up.
+- **🎯 Goal tracking** — Set a target balance and date; the hero shows
+  progress as a sleek progress bar.
+- **⌨️ Keyboard-first** — Click a cell, ⌘C/⌘V to copy and paste. ⌘⇧C/⌘⇧V
+  copies and clones an entire row to the next free date. ⌘Z undoes anything.
+- **🔢 Auto-compute** — Start balance carries from yesterday's end balance
+  + today's deposit − yesterday's withdrawal. Never re-type a number.
+- **🔄 Signed auto-update** — minisign-verified updates straight from
+  GitHub Releases. No update servers, no telemetry.
+- **🔒 Local-first** — All data lives in
+  `~/Library/Application Support/com.tradelog.app/db.sqlite`. You own it.
+  Back it up, sync it via iCloud, do whatever.
+
+## Install
+
+Grab the latest `.dmg` from the [Releases page](https://github.com/JaehanCho/tradelog/releases/latest)
+and drag `TradeLog.app` to `/Applications`.
+
+> [!NOTE]
+> The build is **ad-hoc signed** (no Apple Developer ID yet), so first launch
+> may show a Gatekeeper warning. Right-click → Open the first time, then
+> macOS will remember it.
+
+After the first launch, every subsequent release auto-updates — you'll see a
+toast in the bottom-right when a new version is ready. Click "지금 설치", and
+the app relaunches into the new version.
+
+## Keyboard shortcuts
+
+| Shortcut | What it does |
+|---|---|
+| **Click a cell** | Select |
+| **Double-click** | Edit |
+| **⌘C** / **⌘V** | Copy/paste a single cell value |
+| **⌘⇧C** / **⌘⇧V** | Copy a row / paste it into the next free date |
+| **⌘Z** / **⌘⇧Z** | Undo / redo (50 steps) |
+| **Click a row's ✕** | Delete that day |
+| **Click a calendar month** | Filter the grid to that month |
+
+## Quick tour
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Hero: latest balance · daily PnL · goal progress       │
+├─────────────────────────────────────────────────────────┤
+│  Equity curve (with goal reference line)                │
+├──────────────┬──────────────────────────────────────────┤
+│ Monthly      │  PnL calendar (◀ 2026-05 ▶)              │
+│ stats card   │  ┌──┬──┬──┬──┬──┬──┬──┐                  │
+│ - Total PnL  │  │  │  │  │  │  │  │  │                  │
+│ - Win rate   │  │  │ G│ R│ G│  │  │  │                  │
+│ - Avg daily  │  └──┴──┴──┴──┴──┴──┴──┘                  │
+├──────────────┴──────────────────────────────────────────┤
+│  Trading grid (date · deposit · end · PnL · note)       │
+└─────────────────────────────────────────────────────────┘
+```
 
 ## Develop
 
 ```sh
+git clone https://github.com/JaehanCho/tradelog.git
+cd tradelog
 pnpm install
-pnpm tauri dev
+pnpm tauri dev   # spawns the desktop window
+# or
+pnpm dev         # frontend-only, opens at http://localhost:1420
 ```
 
-## Test
+> [!TIP]
+> The browser-only mode (`pnpm dev`) is great for verifying CSS/layout — but
+> Tauri IPC commands won't resolve, so the grid will be empty. Use it for
+> visual checks, not data flows.
+
+### Test & lint
 
 ```sh
-pnpm test
+pnpm test          # vitest, pure compute logic
+pnpm exec tsc -b   # TypeScript type-check across the workspace
 ```
 
-## Build
+### Bundle a release locally
 
 ```sh
-pnpm tauri build --target universal-apple-darwin
+pnpm tauri build   # produces .app + .dmg under src-tauri/target/...
 ```
 
-The bundle lands at `src-tauri/target/universal-apple-darwin/release/bundle/macos/TradeLog.app`.
+## Architecture
 
-## Release & signing (action items for owner)
+```
+┌─────────────────────────────┐    invoke()    ┌──────────────────┐
+│  React 18 + Vite + Zustand  │ ─────────────▶ │  Rust (Tauri 2)  │
+│  react-data-grid · Recharts │ ◀───────────── │  rusqlite        │
+└─────────────────────────────┘   serde JSON   └─────────┬────────┘
+                                                         │
+                                                ┌────────▼────────┐
+                                                │  SQLite (WAL)   │
+                                                │  trading_day,   │
+                                                │  app_setting    │
+                                                └─────────────────┘
+```
 
-1. **Apple Developer ID** — `$99/yr`. Required for notarization.
-2. **Tauri signer keys**
+- **Frontend** computes derived fields (`start_balance`, `daily_pnl`,
+  `cumulative_return_pct`) in pure functions (`src/lib/compute.ts`) — no
+  round-trips, no perf surprises.
+- **Backend** owns persistence: `rusqlite` with WAL mode and an atomic
+  `rename_or_upsert` for date PK changes (no silent merges).
+- **State**: Zustand store with a 50-step undo history; every mutation pushes
+  a snapshot, undo replays it via `replace_all_trading_days`.
 
-   ```sh
-   pnpm tauri signer generate -w ~/.tauri/tradelog.key
-   ```
+## Tech stack
 
-   - Put the **private** key + password in GitHub Actions secrets:
-     `TAURI_SIGNING_PRIVATE_KEY`, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
-   - Replace `pubkey` in `src-tauri/tauri.conf.json` with the printed public key.
-3. **Updater endpoint** — replace `JaehanCho` in `tauri.conf.json` with the GitHub
-   owner of the public release repo.
-4. **Apple secrets** for notarization
-   (`APPLE_*` env vars in `.github/workflows/release.yml`).
+- **Shell:** Tauri 2 (Rust) — macOS-only, with `macos-private-api` for
+  vibrancy
+- **Frontend:** React 18, TypeScript, Vite
+- **Storage:** SQLite via `rusqlite` (bundled), `rusqlite_migration`
+- **Grid:** `react-data-grid@7.0.0-beta.47` with custom cell editors
+- **Chart:** `recharts` (AreaChart + ReferenceLine)
+- **State:** `zustand`
+- **Updates:** `tauri-plugin-updater` (minisign signature verification)
+- **Clipboard:** `tauri-plugin-clipboard-manager` (bypasses macOS paste prompt)
 
-## Migrating the existing Excel journal
+## Roadmap
 
-1. Open `매매_일지_달러.xlsx`, e.g. sheet `2026-04`.
-2. Select rows 3–32 (data area), columns B–J. `⌘C`.
-3. Switch to TradeLog, click into the grid, `⌘V`.
-4. Repeat for `2026-05`. The equity curve and cumulative return are
-   continuous across months.
+- [ ] CSV / Excel export from the sidebar
+- [ ] Drawdown / max-equity overlay on the curve
+- [ ] Manual dark-mode toggle (system preference + override)
+- [ ] ⌘K command palette
+- [ ] Note search + date-range filter
+- [ ] Skip weekends / holidays in `+ next day`
+- [ ] Per-trade entry mode (ticker, side, PnL)
+- [ ] Optional cloud sync (Cloudflare D1 / Supabase)
+
+See [`tasks/todo.md`](tasks/todo.md) for the full backlog and recent
+findings.
+
+## Releasing
+
+The release pipeline lives in [`.github/workflows/release.yml`](.github/workflows/release.yml).
+Pushing a `vX.Y.Z` tag triggers a universal-darwin build, signs it with
+minisign, and drops a draft release with `.dmg`, `.tar.gz`, `.tar.gz.sig`,
+and `latest.json`. Promote with:
+
+```sh
+gh release edit vX.Y.Z --draft=false --latest
+```
+
+## Contributing
+
+This is a personal tool, but issues and PRs are welcome — especially around
+trading-specific UX. Bring receipts: a clear repro for bugs, or a sketch of
+the UX for features.
+
+## License
+
+[MIT](LICENSE) © Jaehan Cho
+
+<div align="center">
+
+—
+
+*Track your trades. Beat yesterday.*
+
+</div>
