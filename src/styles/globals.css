@@ -863,7 +863,7 @@ button {
 
 .trading-grid .rdg {
   --rdg-background-color: transparent;
-  --rdg-header-background-color: transparent;
+  --rdg-header-background-color: var(--surface-solid);
   --rdg-border-color: var(--separator);
   --rdg-color: var(--text-primary);
   --rdg-row-hover-background-color: rgba(127, 127, 127, 0.08);
@@ -872,6 +872,15 @@ button {
   min-height: 320px;
   border: none;
   font-size: 13px;
+}
+
+/* RDG header row uses display:contents, so a background on the row
+   never paints. Paint header cells directly via the ARIA role and
+   raise their z-index above data cells so rows can't bleed through. */
+.trading-grid .rdg [role="columnheader"] {
+  background-color: var(--surface-solid);
+  z-index: 5;
+  box-shadow: 0 1px 0 var(--separator);
 }
 
 .readonly-cell {
