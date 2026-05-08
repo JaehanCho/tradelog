@@ -1,6 +1,6 @@
 [package]
 name = "tradelog"
-version = "0.1.4"
+version = "0.1.5"
 description = "TradeLog — macOS 매매일지 데스크탑 앱"
 authors = ["cho.jaehan.lnxt@gmail.com"]
 edition = "2021"

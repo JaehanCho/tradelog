@@ -235,7 +235,53 @@ button {
 .grid-empty-msg {
   font-size: 13px;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.7;
+  max-width: 560px;
+}
+
+.grid-empty-msg code {
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  background: rgba(127, 127, 127, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--text-primary);
+}
+
+.grid-empty-tip {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
+.grid-toast {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  background: var(--surface-elev);
+  border: 1px solid var(--separator);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  z-index: 5;
+  max-width: 320px;
+}
+
+.grid-toast-ok {
+  border-left: 3px solid var(--positive);
+}
+.grid-toast-warn {
+  border-left: 3px solid var(--warning);
+}
+
+.trading-grid {
+  position: relative;
 }
 
 .trading-grid .rdg {

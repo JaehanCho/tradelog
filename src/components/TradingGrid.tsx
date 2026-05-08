@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import DataGrid, {
   type Column,
   type RenderEditCellProps,
@@ -48,6 +48,35 @@ const numericEditor =
     />
   );
 
+/**
+ * For the very first row only, "시작금액" is editable as a way to set the
+ * initial capital. Internally we write to `deposit` because compute.ts
+ * treats the first row's deposit as start_balance when there's no prior
+ * end_balance to chain from.
+ */
+const startBalanceFirstRowEditor = ({
+  row,
+  onRowChange,
+  onClose,
+}: RenderEditCellProps<ComputedTradingDay>) => (
+  <input
+    autoFocus
+    className="cell-editor"
+    type="number"
+    step="any"
+    defaultValue={(row.start_balance ?? row.deposit) || ""}
+    onBlur={(e) => {
+      const v = e.currentTarget.value;
+      const num = v === "" ? 0 : Number(v);
+      onRowChange({ ...row, deposit: num, start_balance: num }, true);
+    }}
+    onKeyDown={(e) => {
+      if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+      if (e.key === "Escape") onClose();
+    }}
+  />
+);
+
 const dateEditor = ({
   row,
   onRowChange,
@@ -75,6 +104,8 @@ const fmtPct = (v: number | null | undefined) =>
 const signClass = (v: number | null | undefined) =>
   v === null || v === undefined ? "" : v > 0 ? "positive" : v < 0 ? "negative" : "";
 
+type Toast = { kind: "ok" | "warn"; msg: string };
+
 export function TradingGrid() {
   const computed = useTradingDays((s) => s.computed);
   const upsertOne = useTradingDays((s) => s.upsertOne);
@@ -83,6 +114,12 @@ export function TradingGrid() {
   const redo = useTradingDays((s) => s.redo);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const [toast, setToast] = useState<Toast | null>(null);
+
+  const showToast = useCallback((t: Toast) => {
+    setToast(t);
+    window.setTimeout(() => setToast(null), 3500);
+  }, []);
 
   const rows = computed;
 
@@ -119,10 +156,20 @@ export function TradingGrid() {
         key: "start_balance",
         name: "시작금액",
         width: 130,
-        editable: false,
+        // First row only: editable as a shortcut for "initial capital".
+        editable: (row) => rows[0]?.trade_date === row.trade_date,
+        cellClass: (row) =>
+          rows[0]?.trade_date === row.trade_date ? "" : "readonly-cell",
         renderCell: ({ row }) => (
-          <span className="readonly-cell">{fmtNum(row.start_balance)}</span>
+          <span
+            className={
+              rows[0]?.trade_date === row.trade_date ? "" : "readonly-cell"
+            }
+          >
+            {fmtNum(row.start_balance)}
+          </span>
         ),
+        renderEditCell: startBalanceFirstRowEditor,
       },
       {
         key: "end_balance",
@@ -183,7 +230,7 @@ export function TradingGrid() {
         renderEditCell: NoteEditor,
       },
     ],
-    [],
+    [rows],
   );
 
   const onRowsChange = useCallback(
@@ -208,29 +255,37 @@ export function TradingGrid() {
     [upsertOne],
   );
 
-  // Custom paste handler: native onPaste fired on the grid container.
+  // Window-level paste listener so it fires regardless of focus location.
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
     const onPaste = (e: ClipboardEvent) => {
+      // Don't swallow paste when an inline cell editor is active — it may
+      // be pasting a single value into an <input>.
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+
       const text = e.clipboardData?.getData("text/plain") ?? "";
-      // Single-cell paste (no tabs, no newlines): let RDG editor handle it.
       if (!text.includes("\t") && !text.includes("\n")) return;
       e.preventDefault();
-      e.stopPropagation();
 
       const today = new Date();
       const parsed = parseClipboardTsv(text, {
         defaultYear: today.getFullYear(),
         defaultMonth: today.getMonth() + 1,
       });
-      if (parsed.length > 0) void upsertMany(parsed);
+      if (parsed.length === 0) {
+        showToast({
+          kind: "warn",
+          msg: "붙여넣은 데이터에서 거래일을 못 읽었어. 첫 컬럼이 날짜인지 확인해줘.",
+        });
+        return;
+      }
+      void upsertMany(parsed);
+      showToast({ kind: "ok", msg: `${parsed.length}개 거래일 추가됨` });
     };
 
-    el.addEventListener("paste", onPaste, true);
-    return () => el.removeEventListener("paste", onPaste, true);
-  }, [upsertMany]);
+    window.addEventListener("paste", onPaste, true);
+    return () => window.removeEventListener("paste", onPaste, true);
+  }, [upsertMany, showToast]);
 
   // Cmd+Z / Cmd+Shift+Z
   useEffect(() => {
@@ -253,7 +308,7 @@ export function TradingGrid() {
     <div ref={containerRef} className="trading-grid" tabIndex={0}>
       <div className="grid-toolbar">
         <div className="grid-hint">
-          셀 더블클릭해서 편집 · 엑셀에서 row 복사 후 ⌘V로 일괄 입력 · ⌘Z 실행취소
+          셀 더블클릭해서 편집 · 엑셀에서 row 복사 후 어디서든 ⌘V · ⌘Z 실행취소
         </div>
         <button className="btn btn-primary btn-sm" onClick={addRow}>
           + 거래일 추가
@@ -264,13 +319,21 @@ export function TradingGrid() {
         <div className="grid-empty">
           <div className="grid-empty-title">아직 거래 데이터가 없어요</div>
           <div className="grid-empty-msg">
-            엑셀 시트에서 row를 복사한 뒤 이 영역에 ⌘V로 붙여넣거나,
+            <strong>방법 1.</strong> 아래 버튼으로 첫 거래일을 추가하고
+            셀 더블클릭으로 입력
             <br />
-            아래 버튼으로 첫 거래일을 추가해보세요.
+            <strong>방법 2.</strong> 엑셀에서 9개 컬럼{" "}
+            <code>[날짜 / 입금 / 시작금액 / 최종금액 / 일일수익 /
+              일별수익률 / 누적수익률 / 출금 / 비고]</code>{" "}
+            을 row 단위로 복사한 뒤 어디서든 ⌘V
           </div>
           <button className="btn btn-primary" onClick={addRow}>
             + 첫 거래일 추가
           </button>
+          <div className="grid-empty-tip">
+            첫 거래일은 <strong>시작금액</strong> 또는 <strong>입금</strong>{" "}
+            칸에 시작 자본금을 넣으면 돼 (둘 다 동일).
+          </div>
         </div>
       ) : (
         <DataGrid<ComputedTradingDay>
@@ -282,6 +345,12 @@ export function TradingGrid() {
           rowHeight={36}
           headerRowHeight={36}
         />
+      )}
+
+      {toast && (
+        <div className={`grid-toast grid-toast-${toast.kind}`} role="status">
+          {toast.msg}
+        </div>
       )}
     </div>
   );
