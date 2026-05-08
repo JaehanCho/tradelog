@@ -68,6 +68,38 @@ App data lives at `~/Library/Application Support/com.tradelog.app/db.sqlite`.
 - App caches rows in Zustand on load. After external DB writes, **restart
   the app** to refresh.
 
+## Keep docs in sync with code (do this every task)
+
+Whenever a task ships changes that a user can perceive — new feature, new
+shortcut, behavior change, dependency / runtime requirement, install or
+release flow tweak — **update `README.md` in the same commit**, before
+tagging. The README is public-facing; out-of-date claims are worse than
+missing ones.
+
+Specifically check:
+
+- **Features list** — added/removed capabilities, new flows
+- **Keyboard shortcuts table** — anything that changes the ⌘C / ⌘V / ⌘⇧V
+  semantics, new modifiers, new actions
+- **Architecture / Tech stack** — new plugins (e.g. clipboard-manager),
+  removed dependencies
+- **Roadmap** — strike completed items, add follow-ups discovered along
+  the way
+- **Install / Develop / Releasing** — flag changes, env-var additions,
+  new requirements
+- **Quick tour ASCII layout** — significant UI restructuring
+
+Also keep these in sync where relevant:
+
+- `tasks/todo.md` — log new findings (root causes, lessons) and remaining
+  backlog items
+- This file (`CLAUDE.md`) — capture new operating know-how once, so the
+  next session inherits it
+
+If a change is purely internal (refactor, dep bump, build-config tweak)
+with no user-visible delta, no README update is required — but say so
+explicitly in the commit body so it's clear the omission was deliberate.
+
 ## Release flow (auto-update)
 
 Standing authorization (per user, GH Actions secrets pre-registered):
