@@ -6,6 +6,7 @@ import DataGrid, {
 import "react-data-grid/lib/styles.css";
 
 import { useTradingDays } from "../hooks/useTradingDays";
+import { nextDay, todayKST } from "../lib/dates";
 import { parseClipboardTsv } from "../lib/paste-parser";
 import { NoteEditor } from "./NoteEditor";
 import type { ComputedTradingDay } from "../types/trading-day";
@@ -83,24 +84,19 @@ export function TradingGrid() {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const rows = useMemo<ComputedTradingDay[]>(() => {
-    if (computed.length > 0) return computed;
-    const today = new Date().toISOString().slice(0, 10);
-    return [
-      {
-        trade_date: today,
-        deposit: 0,
-        withdrawal: 0,
-        end_balance: null,
-        note: "",
-        start_balance: null,
-        daily_pnl: null,
-        daily_return_pct: null,
-        cumulative_pnl: null,
-        cumulative_return_pct: null,
-      },
-    ];
-  }, [computed]);
+  const rows = computed;
+
+  const addRow = useCallback(() => {
+    const last = computed[computed.length - 1];
+    const date = last ? nextDay(last.trade_date) : todayKST();
+    void upsertOne({
+      trade_date: date,
+      deposit: 0,
+      withdrawal: 0,
+      end_balance: null,
+      note: "",
+    });
+  }, [computed, upsertOne]);
 
   const columns = useMemo<Column<ComputedTradingDay>[]>(
     () => [
@@ -255,15 +251,38 @@ export function TradingGrid() {
 
   return (
     <div ref={containerRef} className="trading-grid" tabIndex={0}>
-      <DataGrid<ComputedTradingDay>
-        columns={columns}
-        rows={rows}
-        rowKeyGetter={(r) => r.trade_date}
-        onRowsChange={onRowsChange}
-        className="rdg-light-dark"
-        rowHeight={36}
-        headerRowHeight={36}
-      />
+      <div className="grid-toolbar">
+        <div className="grid-hint">
+          셀 더블클릭해서 편집 · 엑셀에서 row 복사 후 ⌘V로 일괄 입력 · ⌘Z 실행취소
+        </div>
+        <button className="btn btn-primary btn-sm" onClick={addRow}>
+          + 거래일 추가
+        </button>
+      </div>
+
+      {rows.length === 0 ? (
+        <div className="grid-empty">
+          <div className="grid-empty-title">아직 거래 데이터가 없어요</div>
+          <div className="grid-empty-msg">
+            엑셀 시트에서 row를 복사한 뒤 이 영역에 ⌘V로 붙여넣거나,
+            <br />
+            아래 버튼으로 첫 거래일을 추가해보세요.
+          </div>
+          <button className="btn btn-primary" onClick={addRow}>
+            + 첫 거래일 추가
+          </button>
+        </div>
+      ) : (
+        <DataGrid<ComputedTradingDay>
+          columns={columns}
+          rows={rows}
+          rowKeyGetter={(r) => r.trade_date}
+          onRowsChange={onRowsChange}
+          className="rdg-light-dark"
+          rowHeight={36}
+          headerRowHeight={36}
+        />
+      )}
     </div>
   );
 }

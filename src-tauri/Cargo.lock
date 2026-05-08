@@ -4019,7 +4019,7 @@ dependencies = [
 
 [[package]]
 name = "tradelog"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "parking_lot",
  "rusqlite",

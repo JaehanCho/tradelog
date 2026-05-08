@@ -39,3 +39,5 @@ src-tauri/gen/schemas
 # OMC artifacts (kept locally, not source)
 .omc/state/
 .omc/logs/
+.omc/project-memory.json
+.omc/notepad.md
