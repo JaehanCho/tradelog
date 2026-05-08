@@ -37,6 +37,24 @@ pub fn rename_or_upsert_trading_day(
 }
 
 #[tauri::command]
+pub fn get_settings(
+    state: State<'_, AppState>,
+) -> AppResult<std::collections::HashMap<String, String>> {
+    let db = state.db.lock();
+    db.get_settings()
+}
+
+#[tauri::command]
+pub fn set_setting(
+    state: State<'_, AppState>,
+    key: String,
+    value: String,
+) -> AppResult<()> {
+    let mut db = state.db.lock();
+    db.set_setting(&key, &value)
+}
+
+#[tauri::command]
 pub fn upsert_trading_days(
     state: State<'_, AppState>,
     days: Vec<TradingDay>,

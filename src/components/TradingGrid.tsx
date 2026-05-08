@@ -99,6 +99,10 @@ const signClass = (v: number | null | undefined) =>
 
 type Toast = { kind: "ok" | "warn"; msg: string };
 
+type SelectedCell = { rowIdx: number; columnKey: string } | null;
+
+const EDITABLE_COLS = new Set(["trade_date", "deposit", "end_balance", "withdrawal", "note"]);
+
 export function TradingGrid() {
   const computed = useTradingDays((s) => s.computed);
   const monthFilter = useTradingDays((s) => s.monthFilter);
@@ -111,6 +115,9 @@ export function TradingGrid() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [selectedCell, setSelectedCell] = useState<SelectedCell>(null);
+  const selectedCellRef = useRef<SelectedCell>(null);
+  selectedCellRef.current = selectedCell;
 
   const showToast = useCallback((t: Toast) => {
     setToast(t);
@@ -301,22 +308,113 @@ export function TradingGrid() {
     [rows, renameDay, upsertOne],
   );
 
-  // Cmd+Z / Cmd+Shift+Z
+  // Cmd+Z / Cmd+Shift+Z + Cmd+C / Cmd+V on selected cell.
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = async (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
       if (!meta) return;
+
+      // Don't hijack copy/paste while user is inside an editor input/textarea.
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      const inEditor = tag === "INPUT" || tag === "TEXTAREA";
+
       if (e.key === "z" && !e.shiftKey) {
         e.preventDefault();
         void undo();
       } else if ((e.key === "z" && e.shiftKey) || e.key === "y") {
         e.preventDefault();
         void redo();
+      } else if (e.key === "c" && !inEditor) {
+        const sel = selectedCellRef.current;
+        if (!sel) return;
+        const row = rows[sel.rowIdx];
+        if (!row) return;
+        const raw = (row as unknown as Record<string, unknown>)[sel.columnKey];
+        const text = raw === null || raw === undefined ? "" : String(raw);
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast({ kind: "ok", msg: "복사됨" });
+        } catch {
+          /* clipboard write may fail in strict contexts; ignore */
+        }
+        e.preventDefault();
+      } else if (e.key === "v" && !inEditor) {
+        const sel = selectedCellRef.current;
+        if (!sel) return;
+        const row = rows[sel.rowIdx];
+        if (!row) return;
+        if (!EDITABLE_COLS.has(sel.columnKey)) {
+          showToast({
+            kind: "warn",
+            msg: "이 컬럼은 자동 계산되어서 paste 불가",
+          });
+          return;
+        }
+        let text: string;
+        try {
+          text = (await navigator.clipboard.readText()).trim();
+        } catch {
+          return;
+        }
+        e.preventDefault();
+        await applyPaste(row, sel.columnKey, text);
       }
     };
+
+    async function applyPaste(
+      row: ComputedTradingDay,
+      col: string,
+      text: string,
+    ) {
+      let updated: ComputedTradingDay = { ...row };
+      let renamedFrom: string | null = null;
+
+      if (col === "trade_date") {
+        const iso = text.match(/^\d{4}-\d{2}-\d{2}$/)?.[0];
+        if (!iso) {
+          showToast({ kind: "warn", msg: "날짜 형식은 YYYY-MM-DD" });
+          return;
+        }
+        if (iso === row.trade_date) return;
+        renamedFrom = row.trade_date;
+        updated = { ...updated, trade_date: iso };
+      } else if (col === "note") {
+        updated = { ...updated, note: text };
+      } else {
+        const cleaned = text.replace(/[$,\s]/g, "");
+        const n = Number(cleaned);
+        if (cleaned !== "" && !Number.isFinite(n)) {
+          showToast({ kind: "warn", msg: "숫자만 paste 가능" });
+          return;
+        }
+        if (col === "end_balance") {
+          updated = { ...updated, end_balance: cleaned === "" ? null : n };
+        } else if (col === "deposit") {
+          updated = { ...updated, deposit: cleaned === "" ? 0 : n };
+        } else if (col === "withdrawal") {
+          updated = { ...updated, withdrawal: cleaned === "" ? 0 : n };
+        }
+      }
+
+      const payload = {
+        trade_date: updated.trade_date,
+        deposit: updated.deposit ?? 0,
+        withdrawal: updated.withdrawal ?? 0,
+        end_balance: updated.end_balance ?? null,
+        note: updated.note ?? "",
+      };
+
+      if (renamedFrom) {
+        await renameDay(renamedFrom, payload);
+      } else {
+        await upsertOne(payload);
+      }
+      showToast({ kind: "ok", msg: "붙여넣음" });
+    }
+
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [undo, redo]);
+  }, [undo, redo, rows, renameDay, upsertOne, showToast]);
 
   return (
     <div ref={containerRef} className="trading-grid" tabIndex={0}>
@@ -364,6 +462,10 @@ export function TradingGrid() {
           rows={rows}
           rowKeyGetter={(r) => r.trade_date}
           onRowsChange={onRowsChange}
+          onCellClick={({ row, column }) => {
+            const idx = rows.findIndex((r) => r.trade_date === row.trade_date);
+            if (idx >= 0) setSelectedCell({ rowIdx: idx, columnKey: column.key });
+          }}
           className="rdg-light-dark"
           rowHeight={36}
           headerRowHeight={36}

@@ -142,6 +142,319 @@ button {
   text-decoration: underline;
 }
 
+/* ---------- Dashboard row (calendar + monthly stats) ---------- */
+
+.dashboard-row {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Monthly stats ---------- */
+
+.month-stats {
+  background: var(--surface);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.month-stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.month-stats-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.month-stats-count {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.month-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.stat-card {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(127, 127, 127, 0.06);
+}
+
+.stat-card-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stat-card-value {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-card-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.stat-card-value.positive,
+.stat-card-sub.positive,
+.stat-card-sub .positive {
+  color: var(--positive);
+}
+.stat-card-value.negative,
+.stat-card-sub.negative,
+.stat-card-sub .negative {
+  color: var(--negative);
+}
+
+/* ---------- PnL Calendar ---------- */
+
+.calendar {
+  background: var(--surface);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.calendar-nav {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.calendar-nav:hover {
+  background: rgba(127, 127, 127, 0.12);
+  color: var(--text-primary);
+}
+
+.calendar-month-btn {
+  appearance: none;
+  background: transparent;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 6px;
+}
+.calendar-month-btn.active {
+  background: rgba(0, 122, 255, 0.16);
+  color: var(--accent);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.calendar-weekday {
+  font-size: 10px;
+  text-align: center;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+}
+.calendar-weekday.sun {
+  color: var(--negative);
+}
+.calendar-weekday.sat {
+  color: var(--accent);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-cell {
+  aspect-ratio: 1.05 / 1;
+  border-radius: 6px;
+  padding: 4px 5px;
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  background: rgba(127, 127, 127, 0.05);
+}
+
+.calendar-cell.calendar-empty {
+  background: transparent;
+}
+
+.calendar-cell.positive {
+  background: rgba(52, 199, 89, 0.16);
+}
+.calendar-cell.negative {
+  background: rgba(255, 59, 48, 0.16);
+}
+.calendar-cell.flat {
+  background: rgba(142, 142, 147, 0.18);
+}
+
+.calendar-cell-day {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.calendar-cell-pnl {
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-top: auto;
+}
+
+.calendar-cell.positive .calendar-cell-pnl {
+  color: var(--positive);
+}
+.calendar-cell.negative .calendar-cell-pnl {
+  color: var(--negative);
+}
+
+/* ---------- Goal progress ---------- */
+
+.goal-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.goal-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.goal-progress-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.goal-progress-edit {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+.goal-progress-edit:hover {
+  text-decoration: underline;
+}
+
+.goal-progress-bar {
+  height: 6px;
+  background: rgba(127, 127, 127, 0.16);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.goal-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+  transition: width 200ms ease-out;
+}
+
+.goal-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.goal-edit-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.goal-edit-modal {
+  background: var(--surface-solid);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: var(--shadow-md);
+}
+
+.goal-edit-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.goal-edit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.goal-edit-row input {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--separator);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+.goal-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .sidebar-header {
   font-weight: 600;
   font-size: 15px;

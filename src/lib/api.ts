@@ -14,4 +14,7 @@ export const api = {
     invoke<void>("replace_all_trading_days", { days }),
   renameOrUpsert: (oldTradeDate: string, day: TradingDay) =>
     invoke<void>("rename_or_upsert_trading_day", { oldTradeDate, day }),
+  getSettings: () => invoke<Record<string, string>>("get_settings"),
+  setSetting: (key: string, value: string) =>
+    invoke<void>("set_setting", { key, value }),
 };

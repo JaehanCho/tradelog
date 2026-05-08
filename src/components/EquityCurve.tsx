@@ -9,9 +9,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useSettings } from "../hooks/useSettings";
 import { useTradingDays } from "../hooks/useTradingDays";
-
-const GOAL = { date: "2028-12-31", balance: 500_000 };
 
 const usd = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -21,6 +20,8 @@ const usd = new Intl.NumberFormat("en-US", {
 
 export function EquityCurve() {
   const computed = useTradingDays((s) => s.computed);
+  const goalBalance = useSettings((s) => s.goalBalance);
+  const goalDate = useSettings((s) => s.goalDate);
 
   const data = useMemo(
     () =>
@@ -71,11 +72,11 @@ export function EquityCurve() {
           }}
         />
         <ReferenceLine
-          y={GOAL.balance}
+          y={goalBalance}
           stroke="var(--accent-secondary)"
           strokeDasharray="4 4"
           label={{
-            value: `목표 ${usd.format(GOAL.balance)} @ 2028-12`,
+            value: `목표 ${usd.format(goalBalance)} @ ${goalDate.slice(0, 7)}`,
             position: "insideTopRight",
             fill: "var(--text-secondary)",
             fontSize: 11,

@@ -8,6 +8,7 @@ use crate::error::{AppError, AppResult};
 use crate::models::TradingDay;
 
 const MIGRATION_0001: &str = include_str!("../migrations/0001_initial.sql");
+const MIGRATION_0002: &str = include_str!("../migrations/0002_settings.sql");
 
 pub struct Db {
     conn: Connection,
@@ -25,7 +26,7 @@ impl Db {
         conn.pragma_update(None, "journal_mode", "WAL")?;
         conn.pragma_update(None, "foreign_keys", "ON")?;
 
-        let migrations = Migrations::new(vec![M::up(MIGRATION_0001)]);
+        let migrations = Migrations::new(vec![M::up(MIGRATION_0001), M::up(MIGRATION_0002)]);
         migrations.to_latest(&mut conn)?;
 
         Ok(Self { conn })
@@ -98,6 +99,31 @@ impl Db {
             }
         }
         tx.commit()?;
+        Ok(())
+    }
+
+    pub fn get_settings(&self) -> AppResult<std::collections::HashMap<String, String>> {
+        let mut stmt = self.conn.prepare("SELECT key, value FROM app_setting")?;
+        let rows = stmt.query_map([], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        })?;
+        let mut map = std::collections::HashMap::new();
+        for r in rows {
+            let (k, v) = r?;
+            map.insert(k, v);
+        }
+        Ok(map)
+    }
+
+    pub fn set_setting(&mut self, key: &str, value: &str) -> AppResult<()> {
+        self.conn.execute(
+            "INSERT INTO app_setting (key, value, updated_at) \
+             VALUES (?1, ?2, strftime('%Y-%m-%dT%H:%M:%fZ','now')) \
+             ON CONFLICT(key) DO UPDATE SET \
+               value = excluded.value, \
+               updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')",
+            params![key, value],
+        )?;
         Ok(())
     }
 
