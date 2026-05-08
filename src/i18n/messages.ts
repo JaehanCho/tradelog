@@ -7,6 +7,16 @@ export type Messages = {
     noData: string;
     updateCheck: string;
     updateCheckTitle: string;
+    sectionsLabel: string;
+    sectionTrading: string;
+    sectionDefi: string;
+    sectionWisdom: string;
+  };
+  views: {
+    defiPlaceholderTitle: string;
+    defiPlaceholderMsg: string;
+    wisdomPlaceholderTitle: string;
+    wisdomPlaceholderMsg: string;
   };
   grid: {
     headerDate: string;
@@ -121,6 +131,16 @@ const ko: Messages = {
     noData: "데이터 없음",
     updateCheck: "업데이트 확인",
     updateCheckTitle: "GitHub Releases에서 새 버전 확인",
+    sectionsLabel: "섹터",
+    sectionTrading: "거래",
+    sectionDefi: "DeFi",
+    sectionWisdom: "어록",
+  },
+  views: {
+    defiPlaceholderTitle: "DeFi 포지션 (준비 중)",
+    defiPlaceholderMsg: "다음 PR에서 디파이/일드파밍 포지션 추적이 들어옵니다.",
+    wisdomPlaceholderTitle: "어록 / 꿀팁 아카이브 (준비 중)",
+    wisdomPlaceholderMsg: "트레이딩 인사이트와 명언을 모아두는 공간이 들어올 예정입니다.",
   },
   grid: {
     headerDate: "날짜",
@@ -236,6 +256,16 @@ const en: Messages = {
     noData: "No data",
     updateCheck: "Check for updates",
     updateCheckTitle: "Check GitHub Releases for a new version",
+    sectionsLabel: "Sections",
+    sectionTrading: "Trading",
+    sectionDefi: "DeFi",
+    sectionWisdom: "Wisdom",
+  },
+  views: {
+    defiPlaceholderTitle: "DeFi positions (coming soon)",
+    defiPlaceholderMsg: "Yield-farming and DeFi position tracking lands in the next PR.",
+    wisdomPlaceholderTitle: "Wisdom archive (coming soon)",
+    wisdomPlaceholderMsg: "A place to collect trading insights and quotes is on the way.",
   },
   grid: {
     headerDate: "Date",

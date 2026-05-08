@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { useTradingDays } from "../hooks/useTradingDays";
+import { useViewMode, type View } from "../hooks/useViewMode";
 import { useT } from "../i18n";
 import { LanguageToggle } from "./LanguageToggle";
 import { triggerUpdateCheck } from "./UpdateNotification";
@@ -9,6 +10,8 @@ export function Sidebar() {
   const computed = useTradingDays((s) => s.computed);
   const monthFilter = useTradingDays((s) => s.monthFilter);
   const setMonthFilter = useTradingDays((s) => s.setMonthFilter);
+  const view = useViewMode((s) => s.view);
+  const setView = useViewMode((s) => s.setView);
   const [version, setVersion] = useState<string>("");
   const t = useT();
 
@@ -24,31 +27,53 @@ export function Sidebar() {
     return Array.from(set).sort().reverse();
   }, [computed]);
 
+  const sections: Array<{ key: View; label: string }> = [
+    { key: "trading", label: t.sidebar.sectionTrading },
+    { key: "defi", label: t.sidebar.sectionDefi },
+    { key: "wisdom", label: t.sidebar.sectionWisdom },
+  ];
+
   return (
     <aside className="app-sidebar">
       <div className="sidebar-header">
         <span className="sidebar-title">TradeLog</span>
       </div>
       <nav className="sidebar-nav">
-        <div className="sidebar-section-label">{t.sidebar.monthLabel}</div>
-        <button
-          className={`sidebar-link ${monthFilter === null ? "active" : ""}`}
-          onClick={() => setMonthFilter(null)}
-        >
-          {t.sidebar.all}
-        </button>
-        {months.length === 0 && (
-          <div className="sidebar-empty">{t.sidebar.noData}</div>
-        )}
-        {months.map((m) => (
+        <div className="sidebar-section-label">{t.sidebar.sectionsLabel}</div>
+        {sections.map((s) => (
           <button
-            key={m}
-            className={`sidebar-link ${monthFilter === m ? "active" : ""}`}
-            onClick={() => setMonthFilter(monthFilter === m ? null : m)}
+            key={s.key}
+            className={`sidebar-link ${view === s.key ? "active" : ""}`}
+            onClick={() => setView(s.key)}
           >
-            {m}
+            {s.label}
           </button>
         ))}
+        {view === "trading" && (
+          <>
+            <div className="sidebar-section-label sidebar-section-label-spaced">
+              {t.sidebar.monthLabel}
+            </div>
+            <button
+              className={`sidebar-link ${monthFilter === null ? "active" : ""}`}
+              onClick={() => setMonthFilter(null)}
+            >
+              {t.sidebar.all}
+            </button>
+            {months.length === 0 && (
+              <div className="sidebar-empty">{t.sidebar.noData}</div>
+            )}
+            {months.map((m) => (
+              <button
+                key={m}
+                className={`sidebar-link ${monthFilter === m ? "active" : ""}`}
+                onClick={() => setMonthFilter(monthFilter === m ? null : m)}
+              >
+                {m}
+              </button>
+            ))}
+          </>
+        )}
       </nav>
       <div className="sidebar-footer">
         <LanguageToggle />
