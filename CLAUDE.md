@@ -154,10 +154,15 @@ ahead of the latest tag (e.g. tag `v0.2.0` shipped, `package.json` stays at
    shipping decision). Body summarises what's in this version.
 6. `git tag vX.Y.Z` and push (`git push && git push --tags`).
 7. GH Actions builds and creates a draft release.
-8. After the build finishes, promote: `gh release edit vX.Y.Z
-   --draft=false --latest`.
+8. **Auto-promote on success** — after `gh run watch` returns 0,
+   immediately run `gh release edit vX.Y.Z --draft=false --latest` and
+   announce the published URL. This is **standing authorization**: do
+   NOT prompt for confirmation. The auto-updater serves users on the
+   previous version only after the release is promoted out of draft, so
+   a manual gate would just delay updates that the user already wants.
 9. Use `gh run watch <runId> --exit-status` (single notification) instead
-   of poll loops with `gh run list` (spammy).
+   of poll loops with `gh run list` (spammy). On non-zero exit, surface
+   the failed run's logs and stop — never promote a failed build.
 
 **Commit-language rule:** all commit messages in English (per user
 preference, locked in 2026-05-08).
