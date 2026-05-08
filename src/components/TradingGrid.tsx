@@ -310,28 +310,19 @@ export function TradingGrid() {
       };
 
       if (oldDate && oldDate !== row.trade_date) {
-        // Date PK changed -> atomic rename. But guard against pasting/typing a
-        // date that already belongs to another row, which would silently merge
-        // them via ON CONFLICT.
-        const conflict = computed.find(
+        // Date PK changed. If the new date already belongs to another row,
+        // overwrite it (rename_or_upsert deletes old + ON CONFLICT updates).
+        // User explicitly asked for overwrite semantics — they can ⌘Z.
+        const overwrote = computed.some(
           (r) => r.trade_date === row.trade_date && r.trade_date !== oldDate,
         );
-        if (conflict) {
-          showToast({
-            kind: "warn",
-            msg: `${row.trade_date} 은(는) 이미 있어. 다른 날짜로.`,
-          });
-          // Force re-render so RDG drops the staged change.
-          void upsertOne({
-            trade_date: oldDate,
-            deposit: oldRow.deposit ?? 0,
-            withdrawal: oldRow.withdrawal ?? 0,
-            end_balance: oldRow.end_balance ?? null,
-            note: oldRow.note ?? "",
-          });
-          return;
-        }
         void renameDay(oldDate, payload);
+        if (overwrote) {
+          showToast({
+            kind: "ok",
+            msg: `${row.trade_date} 행 덮어씀 (⌘Z로 복구)`,
+          });
+        }
       } else {
         void upsertOne(payload);
       }
@@ -453,10 +444,15 @@ export function TradingGrid() {
         return;
       }
       const src = parsed as RowClip;
-      // Keep target's trade_date — pasting onto another row should not steal
-      // its PK and merge two days.
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(src.trade_date)) {
+        showToast({ kind: "warn", msg: "복사된 행의 날짜가 이상함" });
+        return;
+      }
+      // Full row paste: target row gets ALL of src's fields, including
+      // trade_date. rename_or_upsert handles the conflict case by
+      // DELETE-old + ON CONFLICT update at src.trade_date.
       const payload = {
-        trade_date: target.trade_date,
+        trade_date: src.trade_date,
         deposit: Number(src.deposit) || 0,
         withdrawal: Number(src.withdrawal) || 0,
         end_balance:
@@ -465,8 +461,25 @@ export function TradingGrid() {
             : Number(src.end_balance),
         note: String(src.note ?? ""),
       };
-      await upsertOne(payload);
-      showToast({ kind: "ok", msg: "행 붙여넣음" });
+      const overwroteAnother = computed.some(
+        (r) =>
+          r.trade_date === src.trade_date &&
+          r.trade_date !== target.trade_date,
+      );
+      await renameDay(target.trade_date, payload);
+      if (src.trade_date === target.trade_date) {
+        showToast({ kind: "ok", msg: "행 붙여넣음" });
+      } else if (overwroteAnother) {
+        showToast({
+          kind: "ok",
+          msg: `${src.trade_date} 행 덮어씀 (⌘Z로 복구)`,
+        });
+      } else {
+        showToast({
+          kind: "ok",
+          msg: `${target.trade_date} → ${src.trade_date} 로 이동`,
+        });
+      }
     }
 
     async function applyCellPaste(
@@ -484,18 +497,6 @@ export function TradingGrid() {
           return;
         }
         if (iso === row.trade_date) return;
-        // Conflict guard: pasting onto an existing date would merge/delete the
-        // other row via ON CONFLICT. Refuse loudly instead.
-        const conflict = computed.find(
-          (r) => r.trade_date === iso && r.trade_date !== row.trade_date,
-        );
-        if (conflict) {
-          showToast({
-            kind: "warn",
-            msg: `${iso} 은(는) 이미 있어. 먼저 그 행을 지우거나 다른 날짜로.`,
-          });
-          return;
-        }
         renamedFrom = row.trade_date;
         updated = { ...updated, trade_date: iso };
       } else if (col === "note") {
@@ -525,11 +526,22 @@ export function TradingGrid() {
       };
 
       if (renamedFrom) {
+        const overwrote = computed.some(
+          (r) =>
+            r.trade_date === updated.trade_date &&
+            r.trade_date !== renamedFrom,
+        );
         await renameDay(renamedFrom, payload);
+        showToast({
+          kind: "ok",
+          msg: overwrote
+            ? `${updated.trade_date} 행 덮어씀 (⌘Z로 복구)`
+            : "붙여넣음",
+        });
       } else {
         await upsertOne(payload);
+        showToast({ kind: "ok", msg: "붙여넣음" });
       }
-      showToast({ kind: "ok", msg: "붙여넣음" });
     }
 
     window.addEventListener("keydown", onKey);
