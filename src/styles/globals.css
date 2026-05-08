@@ -271,13 +271,20 @@ button {
 
 .dashboard-row {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 16px;
+}
+
+/* Grid items default to min-width: auto which "locks in" the largest
+   intrinsic content size — calendar wouldn't shrink after growing. Force
+   min-width: 0 so the 1fr track actually controls width. */
+.dashboard-row > * {
+  min-width: 0;
 }
 
 @media (max-width: 1100px) {
   .dashboard-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -361,6 +368,11 @@ button {
   border-radius: var(--radius-lg);
   padding: 16px;
   box-shadow: var(--shadow-sm);
+  /* Cap calendar width so it never balloons on ultrawide displays. */
+  max-width: 560px;
+  min-width: 0;
+  margin-inline: auto;
+  width: 100%;
 }
 
 .calendar-header {
@@ -464,6 +476,10 @@ button {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   margin-top: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .calendar-cell.positive .calendar-cell-pnl {
