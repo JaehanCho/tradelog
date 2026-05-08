@@ -121,14 +121,55 @@ When adding a new user-visible string:
 To add a new language: create a third entry in `messages.ts`, append the
 locale code to the `Locale` union, and surface it in `LanguageToggle.tsx`.
 
+## Versioning policy
+
+Three files must stay in lock-step with each other:
+
+- `package.json` (`"version"`)
+- `src-tauri/tauri.conf.json` (`"version"`)
+- `src-tauri/Cargo.toml` (`version = "..."`)
+
+The version they all share is what the **next** release will be. Tags
+(`v0.X.Y`) are the source of truth for what was actually shipped — see
+`git tag --sort=-v:refname` for the history.
+
+**Feature / fix / docs commits do NOT bump the version.** Land them at the
+current in-development version. The `package.json` `version` already reads
+ahead of the latest tag (e.g. tag `v0.2.0` shipped, `package.json` stays at
+`0.2.0` until the next release prep, then bumps to `0.3.0`).
+
+**Release commit pattern.** When the in-development work is shipping-ready:
+
+1. Decide the new version using semver against the most recent tag:
+   - Patch (`0.2.0` → `0.2.1`): bug fixes, tiny tweaks, no schema change.
+   - Minor (`0.2.0` → `0.3.0`): new features, additive schema migrations,
+     new commands. (This is the common case for TradeLog.)
+   - Major (`1.0.0`): only for breaking changes the user must opt into.
+2. Bump all 3 files to the new version.
+3. `cargo update -p tradelog --manifest-path src-tauri/Cargo.toml`
+   (refreshes `Cargo.lock`).
+4. Verify: `pnpm test`, `pnpm exec tsc -b`, `cargo check` (in `src-tauri/`).
+5. One commit, message style `chore: ship vX.Y.Z` (or
+   `chore: bump to vX.Y.Z` if you want to separate the bump from the
+   shipping decision). Body summarises what's in this version.
+6. `git tag vX.Y.Z` and push (`git push && git push --tags`).
+7. GH Actions builds and creates a draft release.
+8. After the build finishes, promote: `gh release edit vX.Y.Z
+   --draft=false --latest`.
+9. Use `gh run watch <runId> --exit-status` (single notification) instead
+   of poll loops with `gh run list` (spammy).
+
+**Commit-language rule:** all commit messages in English (per user
+preference, locked in 2026-05-08).
+
+**Why this split exists.** The auto-updater compares `tauri.conf.json`'s
+version against `latest.json` from GitHub Releases. If `tauri.conf.json`
+drifts behind the actual release, users on the previous version stop
+seeing update prompts. So the tag-and-three-file dance is non-negotiable
+on every release — but absolutely should not happen on every commit.
+
 ## Release flow (auto-update)
 
-Standing authorization (per user, GH Actions secrets pre-registered):
-- Bump version in 3 places: `package.json`, `src-tauri/Cargo.toml`,
-  `src-tauri/tauri.conf.json`
-- `cargo update -p tradelog --manifest-path src-tauri/Cargo.toml`
-- Verify: `pnpm test`, `pnpm exec tsc -b`
-- Commit + tag + push (`v0.X.Y`); GH Actions builds + creates draft release
-- After build: `gh release edit vX.Y.Z --draft=false --latest` to publish
-- Use `gh run watch <runId> --exit-status` (single notification) — not poll
-  loops with `gh run list` (spammy)
+GH Actions secrets (signing key, etc.) are already provisioned. The
+release flow above is the full procedure — no extra steps once the
+version commit and tag are pushed.
