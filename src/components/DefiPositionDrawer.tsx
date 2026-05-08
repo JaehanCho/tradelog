@@ -208,45 +208,56 @@ export function DefiPositionDrawer({ position, open, onClose }: Props) {
               <h3>{t.defi.snapshotsHeading}</h3>
             </div>
             <div className="defi-snapshot-add">
-              <input
-                type="date"
-                value={newSnap.snapshot_date}
-                onChange={(e) =>
-                  setNewSnap({ ...newSnap, snapshot_date: e.target.value })
-                }
-                aria-label={t.defi.snapshotDate}
-              />
-              <input
-                type="number"
-                inputMode="decimal"
-                placeholder={t.defi.snapshotValue}
-                value={newSnap.value_usd}
-                onChange={(e) =>
-                  setNewSnap({ ...newSnap, value_usd: e.target.value })
-                }
-              />
-              <input
-                type="number"
-                inputMode="decimal"
-                placeholder={t.defi.snapshotFees}
-                value={newSnap.fees_earned_usd}
-                onChange={(e) =>
-                  setNewSnap({
-                    ...newSnap,
-                    fees_earned_usd: e.target.value,
-                  })
-                }
-              />
-              <input
-                type="text"
-                placeholder={t.defi.snapshotNote}
-                value={newSnap.note}
-                onChange={(e) =>
-                  setNewSnap({ ...newSnap, note: e.target.value })
-                }
-              />
+              <label className="defi-snapshot-field">
+                <span>{t.defi.snapshotDate}</span>
+                <input
+                  type="date"
+                  value={newSnap.snapshot_date}
+                  onChange={(e) =>
+                    setNewSnap({ ...newSnap, snapshot_date: e.target.value })
+                  }
+                />
+              </label>
+              <label className="defi-snapshot-field">
+                <span>{t.defi.snapshotValue}</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="0"
+                  value={newSnap.value_usd}
+                  onChange={(e) =>
+                    setNewSnap({ ...newSnap, value_usd: e.target.value })
+                  }
+                />
+              </label>
+              <label className="defi-snapshot-field">
+                <span>{t.defi.snapshotFees}</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  placeholder="0"
+                  value={newSnap.fees_earned_usd}
+                  onChange={(e) =>
+                    setNewSnap({
+                      ...newSnap,
+                      fees_earned_usd: e.target.value,
+                    })
+                  }
+                />
+              </label>
+              <label className="defi-snapshot-field">
+                <span>{t.defi.snapshotNote}</span>
+                <input
+                  type="text"
+                  placeholder=""
+                  value={newSnap.note}
+                  onChange={(e) =>
+                    setNewSnap({ ...newSnap, note: e.target.value })
+                  }
+                />
+              </label>
               <button
-                className="btn btn-secondary btn-sm"
+                className="btn btn-primary btn-sm defi-snapshot-add-btn"
                 onClick={handleAddSnapshot}
                 disabled={
                   !newSnap.snapshot_date || !Number.isFinite(Number(newSnap.value_usd))
@@ -259,22 +270,28 @@ export function DefiPositionDrawer({ position, open, onClose }: Props) {
               {(snapshots ?? []).map((s: DefiSnapshot) => (
                 <li key={s.id} className="defi-snapshot-row">
                   <span className="defi-snapshot-date">{s.snapshot_date}</span>
-                  <span className="defi-snapshot-value">
-                    {usd.format(s.value_usd)}
-                  </span>
-                  <span className="defi-snapshot-fees">
-                    +{usd.format(s.fees_earned_usd)}
-                  </span>
-                  <span className="defi-snapshot-note" title={s.note}>
-                    {s.note}
+                  <span className="defi-snapshot-money">
+                    <span className="defi-snapshot-value">
+                      {usd.format(s.value_usd)}
+                    </span>
+                    {s.fees_earned_usd > 0 && (
+                      <span className="defi-snapshot-fees">
+                        {" "}+{usd.format(s.fees_earned_usd)}
+                      </span>
+                    )}
                   </span>
                   <button
-                    className="row-delete"
+                    className="defi-snapshot-delete"
                     onClick={() => void deleteSnapshot(s.position_id, s.id)}
                     aria-label="Delete snapshot"
                   >
                     ✕
                   </button>
+                  {s.note && (
+                    <span className="defi-snapshot-note" title={s.note}>
+                      {s.note}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

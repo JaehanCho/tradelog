@@ -20,8 +20,17 @@ export function useTotalEquity(): SectorBreakdown {
   const positions = useDefiPositions((s) => s.positions);
   const snapshotsByPosition = useDefiPositions((s) => s.snapshotsByPosition);
 
-  const trading =
-    [...computed].reverse().find((r) => r.end_balance !== null)?.end_balance ?? 0;
+  // Trading equity = the latest completed day's end_balance MINUS that day's
+  // withdrawal. Per compute.ts the chain rolls `start(t+1) = end(t) +
+  // deposit(t+1) - withdrawal(t)`, so end_balance is the pre-withdrawal
+  // close — subtracting the same row's withdrawal yields the actual cash
+  // sitting in the trading account right now.
+  const lastCompleted = [...computed]
+    .reverse()
+    .find((r) => r.end_balance !== null);
+  const trading = lastCompleted
+    ? (lastCompleted.end_balance ?? 0) - (lastCompleted.withdrawal ?? 0)
+    : 0;
 
   const defi = positions
     .filter((p) => p.closed_date == null)

@@ -25,13 +25,23 @@ export function EquityCurve() {
   const goalDate = useSettings((s) => s.goalDate);
   const t = useT();
 
-  const data = useMemo(
-    () =>
-      computed
-        .filter((r) => r.end_balance !== null)
-        .map((r) => ({ date: r.trade_date, balance: r.end_balance as number })),
-    [computed],
-  );
+  // Plot what the account would be worth if no money had been withdrawn —
+  // i.e. principal + cumulative PnL. This way withdrawals don't dent the
+  // curve (they're not losses, just cash leaving the trading account) and
+  // the goal reference line stays comparable across periods.
+  const data = useMemo(() => {
+    let cumulativeWithdrawal = 0;
+    const out: Array<{ date: string; balance: number }> = [];
+    for (const r of computed) {
+      if (r.end_balance === null) continue;
+      out.push({
+        date: r.trade_date,
+        balance: r.end_balance + cumulativeWithdrawal,
+      });
+      cumulativeWithdrawal += r.withdrawal ?? 0;
+    }
+    return out;
+  }, [computed]);
 
   if (data.length === 0) {
     return (

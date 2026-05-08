@@ -115,6 +115,9 @@ export const useDefiPositions = create<State>((set, get) => ({
     });
     try {
       await api.addPositionSnapshot(s);
+      // Re-pull from backend so the card's "Current" + APR reflect the
+      // newest snapshot immediately, instead of waiting for a view toggle.
+      await get().loadSnapshots(s.position_id);
     } catch (e) {
       set({ snapshotsByPosition: prev, error: String(e) });
     }
@@ -131,6 +134,7 @@ export const useDefiPositions = create<State>((set, get) => ({
     });
     try {
       await api.deletePositionSnapshot(id);
+      await get().loadSnapshots(positionId);
     } catch (e) {
       set({ snapshotsByPosition: prev, error: String(e) });
     }

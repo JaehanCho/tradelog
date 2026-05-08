@@ -39,21 +39,21 @@ export function Sidebar() {
         <span className="sidebar-title">TradeLog</span>
       </div>
       <nav className="sidebar-nav">
-        <div className="sidebar-section-label">{t.sidebar.sectionsLabel}</div>
-        {sections.map((s) => (
-          <button
-            key={s.key}
-            className={`sidebar-link ${view === s.key ? "active" : ""}`}
-            onClick={() => setView(s.key)}
-          >
-            {s.label}
-          </button>
-        ))}
+        <div className="sidebar-group">
+          <div className="sidebar-section-label">{t.sidebar.sectionsLabel}</div>
+          {sections.map((s) => (
+            <button
+              key={s.key}
+              className={`sidebar-link ${view === s.key ? "active" : ""}`}
+              onClick={() => setView(s.key)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
         {view === "trading" && (
-          <>
-            <div className="sidebar-section-label sidebar-section-label-spaced">
-              {t.sidebar.monthLabel}
-            </div>
+          <div className="sidebar-group sidebar-group-divider">
+            <div className="sidebar-section-label">{t.sidebar.monthLabel}</div>
             <button
               className={`sidebar-link ${monthFilter === null ? "active" : ""}`}
               onClick={() => setMonthFilter(null)}
@@ -72,7 +72,7 @@ export function Sidebar() {
                 {m}
               </button>
             ))}
-          </>
+          </div>
         )}
       </nav>
       <div className="sidebar-footer">
