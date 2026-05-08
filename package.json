@@ -1,6 +1,6 @@
 {
   "name": "tradelog",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "type": "module",
   "scripts": {
@@ -17,6 +17,7 @@
     "@tauri-apps/plugin-updater": "^2.0.0",
     "@tauri-apps/plugin-dialog": "^2.0.1",
     "@tauri-apps/plugin-process": "^2.0.0",
+    "@tauri-apps/plugin-clipboard-manager": "^2.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-data-grid": "7.0.0-beta.47",

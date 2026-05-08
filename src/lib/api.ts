@@ -1,4 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
+import {
+  readText as clipboardReadText,
+  writeText as clipboardWriteText,
+} from "@tauri-apps/plugin-clipboard-manager";
 import type { TradingDay } from "../types/trading-day";
 
 export const api = {
@@ -17,4 +21,9 @@ export const api = {
   getSettings: () => invoke<Record<string, string>>("get_settings"),
   setSetting: (key: string, value: string) =>
     invoke<void>("set_setting", { key, value }),
+  // Tauri's native clipboard avoids macOS's "Allow paste from <App>" prompt
+  // that navigator.clipboard.readText() triggers on each paste.
+  clipboardRead: async (): Promise<string> =>
+    (await clipboardReadText()) ?? "",
+  clipboardWrite: (text: string) => clipboardWriteText(text),
 };

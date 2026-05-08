@@ -6,9 +6,20 @@ import DataGrid, {
 import "react-data-grid/lib/styles.css";
 
 import { useTradingDays } from "../hooks/useTradingDays";
+import { api } from "../lib/api";
 import { nextDay, todayKST } from "../lib/dates";
 import { NoteEditor } from "./NoteEditor";
 import type { ComputedTradingDay } from "../types/trading-day";
+
+const ROW_CLIP_KIND = "tradelog_row_v1";
+type RowClip = {
+  _kind: typeof ROW_CLIP_KIND;
+  trade_date: string;
+  deposit: number;
+  end_balance: number | null;
+  withdrawal: number;
+  note: string;
+};
 
 const usd = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -299,16 +310,37 @@ export function TradingGrid() {
       };
 
       if (oldDate && oldDate !== row.trade_date) {
-        // Date PK changed -> atomic rename (DELETE old + INSERT new).
+        // Date PK changed -> atomic rename. But guard against pasting/typing a
+        // date that already belongs to another row, which would silently merge
+        // them via ON CONFLICT.
+        const conflict = computed.find(
+          (r) => r.trade_date === row.trade_date && r.trade_date !== oldDate,
+        );
+        if (conflict) {
+          showToast({
+            kind: "warn",
+            msg: `${row.trade_date} 은(는) 이미 있어. 다른 날짜로.`,
+          });
+          // Force re-render so RDG drops the staged change.
+          void upsertOne({
+            trade_date: oldDate,
+            deposit: oldRow.deposit ?? 0,
+            withdrawal: oldRow.withdrawal ?? 0,
+            end_balance: oldRow.end_balance ?? null,
+            note: oldRow.note ?? "",
+          });
+          return;
+        }
         void renameDay(oldDate, payload);
       } else {
         void upsertOne(payload);
       }
     },
-    [rows, renameDay, upsertOne],
+    [rows, computed, renameDay, upsertOne, showToast],
   );
 
   // Cmd+Z / Cmd+Shift+Z + Cmd+C / Cmd+V on selected cell.
+  // Cmd+Shift+C / Cmd+Shift+V copy/paste the entire row.
   useEffect(() => {
     const onKey = async (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
@@ -324,44 +356,120 @@ export function TradingGrid() {
       } else if ((e.key === "z" && e.shiftKey) || e.key === "y") {
         e.preventDefault();
         void redo();
-      } else if (e.key === "c" && !inEditor) {
+      } else if ((e.key === "c" || e.key === "C") && !inEditor) {
         const sel = selectedCellRef.current;
         if (!sel) return;
         const row = rows[sel.rowIdx];
         if (!row) return;
-        const raw = (row as unknown as Record<string, unknown>)[sel.columnKey];
-        const text = raw === null || raw === undefined ? "" : String(raw);
-        try {
-          await navigator.clipboard.writeText(text);
-          showToast({ kind: "ok", msg: "복사됨" });
-        } catch {
-          /* clipboard write may fail in strict contexts; ignore */
-        }
         e.preventDefault();
-      } else if (e.key === "v" && !inEditor) {
+        if (e.shiftKey) {
+          await copyRow(row);
+        } else {
+          await copyCell(row, sel.columnKey);
+        }
+      } else if ((e.key === "v" || e.key === "V") && !inEditor) {
         const sel = selectedCellRef.current;
         if (!sel) return;
         const row = rows[sel.rowIdx];
         if (!row) return;
-        if (!EDITABLE_COLS.has(sel.columnKey)) {
-          showToast({
-            kind: "warn",
-            msg: "이 컬럼은 자동 계산되어서 paste 불가",
-          });
-          return;
-        }
-        let text: string;
-        try {
-          text = (await navigator.clipboard.readText()).trim();
-        } catch {
-          return;
-        }
         e.preventDefault();
-        await applyPaste(row, sel.columnKey, text);
+        if (e.shiftKey) {
+          await pasteRow(row);
+        } else {
+          if (!EDITABLE_COLS.has(sel.columnKey)) {
+            showToast({
+              kind: "warn",
+              msg: "이 컬럼은 자동 계산되어서 paste 불가",
+            });
+            return;
+          }
+          let text: string;
+          try {
+            text = (await api.clipboardRead()).trim();
+          } catch {
+            showToast({ kind: "warn", msg: "클립보드 읽기 실패" });
+            return;
+          }
+          await applyCellPaste(row, sel.columnKey, text);
+        }
       }
     };
 
-    async function applyPaste(
+    async function copyCell(row: ComputedTradingDay, col: string) {
+      const raw = (row as unknown as Record<string, unknown>)[col];
+      const text = raw === null || raw === undefined ? "" : String(raw);
+      try {
+        await api.clipboardWrite(text);
+        showToast({ kind: "ok", msg: "복사됨" });
+      } catch {
+        showToast({ kind: "warn", msg: "복사 실패" });
+      }
+    }
+
+    async function copyRow(row: ComputedTradingDay) {
+      const clip: RowClip = {
+        _kind: ROW_CLIP_KIND,
+        trade_date: row.trade_date,
+        deposit: row.deposit ?? 0,
+        end_balance: row.end_balance ?? null,
+        withdrawal: row.withdrawal ?? 0,
+        note: row.note ?? "",
+      };
+      try {
+        await api.clipboardWrite(JSON.stringify(clip));
+        showToast({ kind: "ok", msg: "행 전체 복사됨" });
+      } catch {
+        showToast({ kind: "warn", msg: "복사 실패" });
+      }
+    }
+
+    async function pasteRow(target: ComputedTradingDay) {
+      let raw: string;
+      try {
+        raw = (await api.clipboardRead()).trim();
+      } catch {
+        showToast({ kind: "warn", msg: "클립보드 읽기 실패" });
+        return;
+      }
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        showToast({
+          kind: "warn",
+          msg: "행 데이터가 없어. ⌘⇧C로 복사하고 다시 시도해.",
+        });
+        return;
+      }
+      if (
+        !parsed ||
+        typeof parsed !== "object" ||
+        (parsed as { _kind?: string })._kind !== ROW_CLIP_KIND
+      ) {
+        showToast({
+          kind: "warn",
+          msg: "행 데이터가 없어. ⌘⇧C로 복사하고 다시 시도해.",
+        });
+        return;
+      }
+      const src = parsed as RowClip;
+      // Keep target's trade_date — pasting onto another row should not steal
+      // its PK and merge two days.
+      const payload = {
+        trade_date: target.trade_date,
+        deposit: Number(src.deposit) || 0,
+        withdrawal: Number(src.withdrawal) || 0,
+        end_balance:
+          src.end_balance === null || src.end_balance === undefined
+            ? null
+            : Number(src.end_balance),
+        note: String(src.note ?? ""),
+      };
+      await upsertOne(payload);
+      showToast({ kind: "ok", msg: "행 붙여넣음" });
+    }
+
+    async function applyCellPaste(
       row: ComputedTradingDay,
       col: string,
       text: string,
@@ -376,6 +484,18 @@ export function TradingGrid() {
           return;
         }
         if (iso === row.trade_date) return;
+        // Conflict guard: pasting onto an existing date would merge/delete the
+        // other row via ON CONFLICT. Refuse loudly instead.
+        const conflict = computed.find(
+          (r) => r.trade_date === iso && r.trade_date !== row.trade_date,
+        );
+        if (conflict) {
+          showToast({
+            kind: "warn",
+            msg: `${iso} 은(는) 이미 있어. 먼저 그 행을 지우거나 다른 날짜로.`,
+          });
+          return;
+        }
         renamedFrom = row.trade_date;
         updated = { ...updated, trade_date: iso };
       } else if (col === "note") {
@@ -414,7 +534,7 @@ export function TradingGrid() {
 
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [undo, redo, rows, renameDay, upsertOne, showToast]);
+  }, [undo, redo, rows, computed, renameDay, upsertOne, showToast]);
 
   return (
     <div ref={containerRef} className="trading-grid" tabIndex={0}>
@@ -431,7 +551,10 @@ export function TradingGrid() {
               </button>
             </>
           ) : (
-            <>셀 더블클릭해서 편집 · ⌘Z 실행취소 · 행 끝 ✕로 삭제</>
+            <>
+              셀 클릭 후 ⌘C/⌘V · 행 전체는 ⌘⇧C/⌘⇧V · 더블클릭으로 편집 · ⌘Z
+              실행취소 · 행 끝 ✕로 삭제
+            </>
           )}
         </div>
         <button className="btn btn-primary btn-sm" onClick={addRow}>
