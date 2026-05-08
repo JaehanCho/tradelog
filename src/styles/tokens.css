@@ -1,0 +1,67 @@
+/*
+ * Apple HIG–aligned design tokens.
+ * Light mode mirrors macOS system semantic colors;
+ * the dark block overrides via prefers-color-scheme.
+ *
+ * Reference: developer.apple.com/design/human-interface-guidelines/color
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Surfaces */
+  --bg: #f5f5f7;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-solid: #ffffff;
+  --surface-elev: rgba(255, 255, 255, 0.92);
+  --sidebar-bg: rgba(246, 246, 247, 0.55);
+
+  /* Text */
+  --text-primary: rgba(0, 0, 0, 0.87);
+  --text-secondary: rgba(60, 60, 67, 0.65);
+  --text-tertiary: rgba(60, 60, 67, 0.45);
+
+  /* Lines */
+  --separator: rgba(60, 60, 67, 0.18);
+  --separator-strong: rgba(60, 60, 67, 0.32);
+
+  /* Accents (system colors) */
+  --accent: #007aff;            /* systemBlue */
+  --accent-secondary: #5856d6;  /* systemIndigo */
+  --positive: #34c759;          /* systemGreen */
+  --negative: #ff3b30;          /* systemRed */
+  --warning: #ff9500;            /* systemOrange */
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 18px rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1c1e;
+    --surface: rgba(44, 44, 46, 0.72);
+    --surface-solid: #2c2c2e;
+    --surface-elev: rgba(58, 58, 60, 0.86);
+    --sidebar-bg: rgba(28, 28, 30, 0.55);
+
+    --text-primary: rgba(255, 255, 255, 0.92);
+    --text-secondary: rgba(235, 235, 245, 0.62);
+    --text-tertiary: rgba(235, 235, 245, 0.40);
+
+    --separator: rgba(255, 255, 255, 0.12);
+    --separator-strong: rgba(255, 255, 255, 0.20);
+
+    --accent: #0a84ff;
+    --accent-secondary: #5e5ce6;
+    --positive: #30d158;
+    --negative: #ff453a;
+    --warning: #ff9f0a;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 22px rgba(0, 0, 0, 0.5);
+  }
+}
