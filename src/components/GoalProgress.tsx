@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSettings } from "../hooks/useSettings";
-import { useTradingDays } from "../hooks/useTradingDays";
+import { useTotalEquity } from "../hooks/useTotalEquity";
 import { useT } from "../i18n";
 
 const usd = new Intl.NumberFormat("en-US", {
@@ -13,13 +13,13 @@ export function GoalProgress() {
   const goalBalance = useSettings((s) => s.goalBalance);
   const goalDate = useSettings((s) => s.goalDate);
   const setGoal = useSettings((s) => s.setGoal);
-  const computed = useTradingDays((s) => s.computed);
+  const { total } = useTotalEquity();
   const t = useT();
 
-  const last = [...computed]
-    .reverse()
-    .find((r) => r.end_balance !== null);
-  const balance = last?.end_balance ?? 0;
+  // Goal is a total-portfolio target: trading + DeFi. Sectors that aren't
+  // populated contribute 0, so trading-only users still see a sensible
+  // progress bar.
+  const balance = total;
   const progress = goalBalance > 0 ? Math.max(0, balance / goalBalance) : 0;
   const progressClamped = Math.min(progress, 1);
 

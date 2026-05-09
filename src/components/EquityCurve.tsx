@@ -8,6 +8,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  type TooltipProps,
 } from "recharts";
 import { useSettings } from "../hooks/useSettings";
 import { useTradingDays } from "../hooks/useTradingDays";
@@ -19,24 +20,34 @@ const usd = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
+const pct = (n: number) =>
+  `${n >= 0 ? "+" : ""}${(n * 100).toFixed(2)}%`;
+
+interface EquityPoint {
+  date: string;
+  cumulative: number;
+  returnPct: number;
+}
+
 export function EquityCurve() {
   const computed = useTradingDays((s) => s.computed);
   const goalBalance = useSettings((s) => s.goalBalance);
   const goalDate = useSettings((s) => s.goalDate);
   const t = useT();
 
-  // Plot what the account would be worth if no money had been withdrawn —
-  // i.e. principal + cumulative PnL. This way withdrawals don't dent the
-  // curve (they're not losses, just cash leaving the trading account) and
-  // the goal reference line stays comparable across periods.
-  const data = useMemo(() => {
+  // Plot the cumulative trading amount — `principal + cumulative PnL`. This
+  // is deposit/withdrawal-neutral: the line tracks performance, not the
+  // raw cash sitting in the account. `cumulative_return_pct` rides along
+  // so the tooltip can show both magnitude and rate at the same time.
+  const data = useMemo<EquityPoint[]>(() => {
     let cumulativeWithdrawal = 0;
-    const out: Array<{ date: string; balance: number }> = [];
+    const out: EquityPoint[] = [];
     for (const r of computed) {
       if (r.end_balance === null) continue;
       out.push({
         date: r.trade_date,
-        balance: r.end_balance + cumulativeWithdrawal,
+        cumulative: r.end_balance + cumulativeWithdrawal,
+        returnPct: r.cumulative_return_pct ?? 0,
       });
       cumulativeWithdrawal += r.withdrawal ?? 0;
     }
@@ -51,6 +62,35 @@ export function EquityCurve() {
       </div>
     );
   }
+
+  const renderTooltip = ({ active, payload }: TooltipProps<number, string>) => {
+    if (!active || !payload || payload.length === 0) return null;
+    const point = payload[0].payload as EquityPoint;
+    const positive = point.returnPct >= 0;
+    return (
+      <div className="equity-tooltip">
+        <div className="equity-tooltip-date">{point.date}</div>
+        <div className="equity-tooltip-row">
+          <span className="equity-tooltip-label">{t.equity.tooltipLabel}</span>
+          <span className="equity-tooltip-value">
+            {usd.format(point.cumulative)}
+          </span>
+        </div>
+        <div className="equity-tooltip-row">
+          <span className="equity-tooltip-label">
+            {t.equity.tooltipReturnLabel}
+          </span>
+          <span
+            className={`equity-tooltip-value ${
+              positive ? "tone-pos" : "tone-neg"
+            }`}
+          >
+            {pct(point.returnPct)}
+          </span>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <ResponsiveContainer width="100%" height={260}>
@@ -74,15 +114,7 @@ export function EquityCurve() {
           stroke="var(--separator)"
           width={72}
         />
-        <Tooltip
-          formatter={(v: number) => usd.format(v)}
-          contentStyle={{
-            background: "var(--surface)",
-            border: "1px solid var(--separator)",
-            borderRadius: 8,
-            fontSize: 12,
-          }}
-        />
+        <Tooltip content={renderTooltip} />
         <ReferenceLine
           y={goalBalance}
           stroke="var(--accent-secondary)"
@@ -99,7 +131,7 @@ export function EquityCurve() {
         />
         <Area
           type="monotone"
-          dataKey="balance"
+          dataKey="cumulative"
           stroke="var(--accent)"
           strokeWidth={2}
           fill="url(#equityFill)"

@@ -1166,6 +1166,50 @@ button {
   font-size: 13px;
 }
 
+.equity-tooltip {
+  background: var(--surface);
+  border: 1px solid var(--separator);
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: var(--shadow-md);
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+}
+
+.equity-tooltip-date {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--separator);
+}
+
+.equity-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.equity-tooltip-label {
+  color: var(--text-secondary);
+}
+
+.equity-tooltip-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.equity-tooltip-value.tone-pos {
+  color: var(--positive);
+}
+.equity-tooltip-value.tone-neg {
+  color: var(--negative);
+}
+
 /* ---------- Trading grid ---------- */
 
 .trading-grid {

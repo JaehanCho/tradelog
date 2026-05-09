@@ -185,6 +185,8 @@ export type Messages = {
   equity: {
     empty: string;
     goalLabel: (balance: string, ym: string) => string;
+    tooltipLabel: string;
+    tooltipReturnLabel: string;
   };
   balance: {
     label: string;
@@ -399,6 +401,8 @@ const ko: Messages = {
   equity: {
     empty: "데이터를 입력해주세요",
     goalLabel: (balance, ym) => `목표 ${balance} @ ${ym}`,
+    tooltipLabel: "누적 금액",
+    tooltipReturnLabel: "수익률",
   },
   balance: {
     label: "현재 잔액",
@@ -614,6 +618,8 @@ const en: Messages = {
   equity: {
     empty: "Enter some data to see the curve",
     goalLabel: (balance, ym) => `Goal: ${balance} @ ${ym}`,
+    tooltipLabel: "Cumulative",
+    tooltipReturnLabel: "Return",
   },
   balance: {
     label: "Current balance",
