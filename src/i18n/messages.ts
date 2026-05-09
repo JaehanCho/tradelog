@@ -159,6 +159,18 @@ export type Messages = {
     avgDaily: string;
     perDay: string;
   };
+  monthlyBars: {
+    title: string;
+    subtitle: (n: number) => string;
+    empty: string;
+  };
+  monthPicker: {
+    title: string;
+    openLabel: string;
+    cellTooltip: (ym: string, count: number) => string;
+    noData: string;
+    hint: string;
+  };
   goal: {
     label: (balance: string, date: string) => string;
     edit: string;
@@ -360,6 +372,18 @@ const ko: Messages = {
     losses: (n) => `${n}패`,
     avgDaily: "평균 일수익",
     perDay: "/ 거래일",
+  },
+  monthlyBars: {
+    title: "월별 PnL",
+    subtitle: (n) => `최근 ${n}개월`,
+    empty: "아직 월별 데이터가 없어요",
+  },
+  monthPicker: {
+    title: "월별 필터",
+    openLabel: "월 선택",
+    cellTooltip: (ym, count) => `${ym} · ${count}거래일`,
+    noData: "데이터 없음",
+    hint: "↑↓←→ 이동 · Enter 선택 · Esc 닫기",
   },
   goal: {
     label: (balance, date) => `목표 ${balance} @ ${date}`,
@@ -563,6 +587,18 @@ const en: Messages = {
     losses: (n) => `${n}L`,
     avgDaily: "Avg daily",
     perDay: "/ day",
+  },
+  monthlyBars: {
+    title: "Monthly PnL",
+    subtitle: (n) => `Last ${n} month${n === 1 ? "" : "s"}`,
+    empty: "No monthly data yet",
+  },
+  monthPicker: {
+    title: "Filter by month",
+    openLabel: "Pick month",
+    cellTooltip: (ym, count) => `${ym} · ${count} day${count === 1 ? "" : "s"}`,
+    noData: "(no data)",
+    hint: "↑↓←→ move · Enter select · Esc close",
   },
   goal: {
     label: (balance, date) => `Goal: ${balance} @ ${date}`,

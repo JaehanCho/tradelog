@@ -37,11 +37,15 @@ That's TradeLog.
 - **📂 Multi-sector journal** — Sidebar tabs for **Trading**, **DeFi**, and
   **Tips**. Total assets sum across sectors and live in the always-on hero
   card.
-- **🗓️ Recent journal feed** — A compact card grid above the trading grid
+- **🗓️ Recent journal feed** — A vertical timeline above the trading grid
   that surfaces only the days where a trade or market note exists, newest
-  first. Click a card to jump into the day detail drawer.
+  first. Full note text is right there to read — the day-detail drawer is
+  one ✎ click away when you want to edit.
 - **📅 PnL calendar** — Binance-style heatmap. Green days, red days, see
   your month at a glance.
+- **📊 Monthly P&L bars** — On wide windows, a sparkline-style breakdown of
+  the last 12 months sits to the right of the calendar. Click a bar to
+  filter the grid to that month.
 - **📈 Equity curve** — Recharts-powered area chart with a goal reference
   line. Watch the line go up.
 - **🎯 Goal tracking** — Set a target balance and date; the hero shows
@@ -104,17 +108,22 @@ the app relaunches into the new version.
 ┌──────────────┬──────────────────────────────────────────┐
 │  Sidebar     │  Hero: total assets (Trading + DeFi)    │
 │ ▸ Trading    │  + sector breakdown bar                  │
-│   ㄴ All     ├──────────────────────────────────────────┤
-│   ㄴ 2026-05 │  Trading view:                            │
-│   ㄴ 2026-04 │   Equity curve · monthly stats · cal.    │
-│   DeFi       │   Recent journal feed (notes only)       │
-│   Tips       │   Trading grid                            │
+│   📅 2026-05 ├──────────────────────────────────────────┤
+│   DeFi       │  Trading view:                            │
+│   Tips       │   Equity curve · monthly stats           │
+│              │   Calendar · monthly P&L bars             │
+│              │   Journal timeline (notes only)          │
+│              │   Trading grid                            │
 │ ─ Footer ─── │  DeFi view:                               │
 │ KO/EN  vX.Y  │   Position cards + snapshot timeline     │
 │              │  Tips view:                               │
 │              │   Masonry cards · tags · search · ⌘N     │
 └──────────────┴──────────────────────────────────────────┘
 ```
+
+The 📅 chip under **Trading** opens a year-by-month grid popover — pick any
+month with data (rows = years, columns = 1–12). `↑↓←→` navigates, `Enter`
+selects, `Esc` closes.
 
 ## Develop
 

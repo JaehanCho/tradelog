@@ -302,11 +302,11 @@ button {
   text-decoration: underline;
 }
 
-/* ---------- Dashboard row (calendar + monthly stats) ---------- */
+/* ---------- Dashboard row (stats + calendar + monthly bars) ---------- */
 
 .dashboard-row {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-columns: 320px minmax(0, 560px) minmax(0, 1fr);
   gap: 16px;
 }
 
@@ -315,6 +315,16 @@ button {
    min-width: 0 so the 1fr track actually controls width. */
 .dashboard-row > * {
   min-width: 0;
+}
+
+/* Below ~1280px the bars track has no useful width — drop it from the
+   row and fall back to the original 2-column layout. The actual
+   `display: none` lives after the .monthly-bars default below so it
+   wins the cascade. */
+@media (max-width: 1400px) {
+  .dashboard-row {
+    grid-template-columns: 320px minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 1100px) {
@@ -393,6 +403,316 @@ button {
 .stat-card-sub.negative,
 .stat-card-sub .negative {
   color: var(--negative);
+}
+
+/* ---------- Monthly P&L bars (right of calendar) ---------- */
+
+.monthly-bars {
+  background: var(--surface);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.monthly-bars-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.monthly-bars-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.monthly-bars-subtitle {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.monthly-bars-empty {
+  padding: 18px 12px;
+  border: 1px dashed var(--separator);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.monthly-bars-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.monthly-bars-row {
+  display: block;
+}
+
+.monthly-bars-button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 64px;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px;
+  appearance: none;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font: inherit;
+  color: var(--text-primary);
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.monthly-bars-button:hover {
+  background: rgba(127, 127, 127, 0.08);
+}
+
+.monthly-bars-row.is-active .monthly-bars-button {
+  background: rgba(0, 122, 255, 0.12);
+}
+
+.monthly-bars-label {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.monthly-bars-month {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.monthly-bars-year {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.monthly-bars-track {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(127, 127, 127, 0.08);
+  min-width: 0;
+}
+
+.monthly-bars-zero {
+  position: absolute;
+  left: 50%;
+  top: -1px;
+  bottom: -1px;
+  width: 1px;
+  background: rgba(127, 127, 127, 0.32);
+}
+
+.monthly-bars-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+  transition: width 0.18s, left 0.18s;
+}
+
+.monthly-bars-fill.tone-pos {
+  background: var(--positive);
+}
+.monthly-bars-fill.tone-neg {
+  background: var(--negative);
+}
+.monthly-bars-fill.tone-flat {
+  background: rgba(127, 127, 127, 0.5);
+}
+
+.monthly-bars-value {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.monthly-bars-value.tone-pos {
+  color: var(--positive);
+}
+.monthly-bars-value.tone-neg {
+  color: var(--negative);
+}
+.monthly-bars-value.tone-flat {
+  color: var(--text-secondary);
+}
+
+/* Hide the bars when the dashboard row falls back to 2-col below
+   1280px (declared after the default to win the cascade). */
+@media (max-width: 1400px) {
+  .monthly-bars {
+    display: none;
+  }
+}
+
+/* ---------- Month picker popover ---------- */
+
+.month-picker-popover {
+  position: fixed;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--surface-elev);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  outline: none;
+  animation: note-popover-fade 100ms ease-out;
+}
+
+.month-picker-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.month-picker-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.month-picker-all {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.month-picker-all:hover {
+  text-decoration: underline;
+}
+
+.month-picker-empty {
+  padding: 20px 12px;
+  border: 1px dashed var(--separator);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.month-picker-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.month-picker-row {
+  display: grid;
+  grid-template-columns: 32px repeat(12, 1fr);
+  align-items: center;
+  gap: 1px;
+}
+
+.month-picker-headrow {
+  margin-bottom: 2px;
+}
+
+.month-picker-yearcell {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  padding-right: 4px;
+}
+
+.month-picker-monthhead {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.month-picker-cell {
+  appearance: none;
+  background: transparent;
+  border: none;
+  width: 100%;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0;
+  font-family: inherit;
+  transition: background 0.1s, transform 0.05s;
+}
+
+.month-picker-cell:disabled {
+  cursor: default;
+}
+
+.month-picker-cell.has-data:hover,
+.month-picker-cell.is-focused {
+  background: rgba(127, 127, 127, 0.16);
+}
+
+.month-picker-cell.is-active {
+  background: rgba(0, 122, 255, 0.18);
+}
+
+.month-picker-cell.is-active.is-focused {
+  background: rgba(0, 122, 255, 0.28);
+}
+
+.month-picker-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(127, 127, 127, 0.18);
+}
+
+.month-picker-cell.has-data .month-picker-dot {
+  background: var(--accent);
+}
+
+.month-picker-cell.is-active .month-picker-dot {
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--surface-elev);
+  transform: scale(1.15);
+}
+
+.month-picker-footer {
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--separator);
+  padding-top: 8px;
+}
+
+.month-picker-hint {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
 }
 
 /* ---------- PnL Calendar ---------- */
@@ -667,31 +987,48 @@ button {
   gap: 1px;
 }
 
-.sidebar-sub {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  margin: 2px 0 6px;
+.sidebar-month-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 8px 6px 16px;
+  padding: 3px 8px;
+  appearance: none;
+  background: rgba(127, 127, 127, 0.08);
+  border: 1px solid var(--separator);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
 
-.sidebar-link-sub {
-  padding-left: 22px;
-  font-size: 12px;
-  position: relative;
+.sidebar-month-trigger:hover,
+.sidebar-month-trigger.is-open {
+  background: rgba(127, 127, 127, 0.16);
+  border-color: var(--separator-strong);
+  color: var(--text-primary);
 }
 
-.sidebar-link-sub::before {
-  content: "";
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  width: 6px;
-  height: 1px;
-  background: var(--separator-strong);
+.sidebar-month-trigger.has-filter {
+  background: rgba(0, 122, 255, 0.12);
+  border-color: rgba(0, 122, 255, 0.4);
+  color: var(--accent);
 }
 
-.sidebar-empty-sub {
-  padding-left: 22px;
+.sidebar-month-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+}
+
+.sidebar-month-label {
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .sidebar-link {
@@ -1076,76 +1413,133 @@ button {
   text-align: center;
 }
 
-.journal-feed-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+.journal-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.journal-timeline::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 10px;
+  bottom: 10px;
+  width: 1px;
+  background: var(--separator);
+}
+
+.journal-entry {
+  position: relative;
+  padding: 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.journal-entry:last-child {
+  padding-bottom: 0;
+}
+
+.journal-entry::before {
+  content: "";
+  position: absolute;
+  left: -21px;
+  top: 7px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  box-shadow: 0 0 0 2px var(--bg);
+  z-index: 1;
+}
+
+.journal-entry.tone-pos::before {
+  background: var(--positive);
+}
+.journal-entry.tone-neg::before {
+  background: var(--negative);
+}
+
+.journal-entry-head {
+  display: flex;
+  align-items: baseline;
   gap: 10px;
 }
 
-.journal-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  text-align: left;
-  font: inherit;
-  color: var(--text-primary);
-  background: var(--surface-elev);
-  border: 1px solid var(--separator);
-  border-radius: var(--radius-md, 12px);
-  padding: 12px 14px;
-  cursor: pointer;
-  transition: border-color 0.15s, transform 0.05s;
-}
-.journal-card:hover {
-  border-color: var(--accent);
-}
-.journal-card:active {
-  transform: translateY(1px);
-}
-
-.journal-card-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--separator);
-}
-
-.journal-card-date {
+.journal-entry-date {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
-.journal-card-pnl {
+.journal-entry-pnl {
   font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  margin-left: auto;
 }
-.journal-card-pnl.tone-pos {
+.journal-entry-pnl.tone-pos {
   color: var(--positive);
 }
-.journal-card-pnl.tone-neg {
+.journal-entry-pnl.tone-neg {
   color: var(--negative);
 }
-.journal-card-pnl.tone-neutral {
+.journal-entry-pnl.tone-neutral {
   color: var(--text-secondary);
 }
-.journal-card-pct {
+.journal-entry-pct {
   font-size: 11px;
   font-weight: 500;
 }
 
-.journal-card-block {
+.journal-entry-edit {
+  appearance: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-family: inherit;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+}
+.journal-entry:hover .journal-entry-edit,
+.journal-entry-edit:focus-visible {
+  opacity: 1;
+}
+.journal-entry-edit:hover {
+  background: rgba(127, 127, 127, 0.14);
+  color: var(--accent);
+}
+
+.journal-entry-body {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  margin-top: 2px;
 }
 
-.journal-card-tag {
+.journal-entry-block {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  display: flex;
+  gap: 8px;
+}
+
+.journal-entry-tag {
+  flex: 0 0 auto;
   align-self: flex-start;
+  margin-top: 3px;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -1155,25 +1549,18 @@ button {
   background: rgba(127, 127, 127, 0.14);
   color: var(--text-secondary);
 }
-.journal-card-tag.tone-market {
+.journal-entry-tag.tone-market {
   background: rgba(0, 122, 255, 0.14);
   color: var(--accent);
 }
-.journal-card-tag.tone-trade {
+.journal-entry-tag.tone-trade {
   background: rgba(127, 127, 127, 0.14);
   color: var(--text-secondary);
 }
 
-.journal-card-text {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--text-primary);
-  white-space: pre-wrap;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.journal-entry-text {
+  flex: 1;
+  min-width: 0;
 }
 
 /* ───── Day detail drawer ───────────────────────────────────────── */

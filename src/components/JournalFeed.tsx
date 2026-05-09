@@ -4,7 +4,7 @@ import { useT } from "../i18n";
 import type { ComputedTradingDay } from "../types/trading-day";
 import { DayDetailDrawer } from "./DayDetailDrawer";
 
-const COLLAPSED_COUNT = 9;
+const COLLAPSED_COUNT = 5;
 
 const usd = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -22,8 +22,6 @@ export function JournalFeed() {
   const [drawerDate, setDrawerDate] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
 
-  // Show only days that have something written down — either a trade note
-  // or a market note. Newest first so the latest thinking is at the top.
   const entries = useMemo(() => {
     const filtered = monthFilter
       ? computed.filter((r) => r.trade_date.startsWith(monthFilter))
@@ -64,15 +62,16 @@ export function JournalFeed() {
           </button>
         )}
       </header>
-      <div className="journal-feed-grid">
+      <ol className="journal-timeline">
         {visible.map((r) => (
-          <JournalCard
+          <JournalEntry
             key={r.trade_date}
             row={r}
-            onClick={() => setDrawerDate(r.trade_date)}
+            onEdit={() => setDrawerDate(r.trade_date)}
+            editAria={t.drawer.openAria}
           />
         ))}
-      </div>
+      </ol>
       <DayDetailDrawer
         row={drawerRow}
         onClose={() => setDrawerDate(null)}
@@ -81,12 +80,14 @@ export function JournalFeed() {
   );
 }
 
-function JournalCard({
+function JournalEntry({
   row,
-  onClick,
+  onEdit,
+  editAria,
 }: {
   row: ComputedTradingDay;
-  onClick: () => void;
+  onEdit: () => void;
+  editAria: string;
 }) {
   const t = useT();
   const market = (row.market_note ?? "").trim();
@@ -101,38 +102,48 @@ function JournalCard({
           : "neutral";
 
   return (
-    <button type="button" className="journal-card" onClick={onClick}>
-      <header className="journal-card-head">
-        <span className="journal-card-date">{formatDateLabel(row.trade_date)}</span>
-        <span className={`journal-card-pnl tone-${tone}`}>
+    <li className={`journal-entry tone-${tone}`}>
+      <header className="journal-entry-head">
+        <span className="journal-entry-date">{formatDateLabel(row.trade_date)}</span>
+        <span className={`journal-entry-pnl tone-${tone}`}>
           {row.daily_pnl == null
             ? "—"
             : `${row.daily_pnl >= 0 ? "+" : ""}${usd.format(row.daily_pnl)}`}
           {row.daily_return_pct != null && (
-            <span className="journal-card-pct">
+            <span className="journal-entry-pct">
               {" "}({pct(row.daily_return_pct)})
             </span>
           )}
         </span>
+        <button
+          type="button"
+          className="journal-entry-edit"
+          onClick={onEdit}
+          aria-label={editAria}
+          title={editAria}
+        >
+          ✎
+        </button>
       </header>
-
-      {market && (
-        <div className="journal-card-block">
-          <span className="journal-card-tag tone-market">
-            {t.journal.marketNoteTag}
-          </span>
-          <p className="journal-card-text">{market}</p>
-        </div>
-      )}
-      {trade && (
-        <div className="journal-card-block">
-          <span className="journal-card-tag tone-trade">
-            {t.journal.tradeNoteTag}
-          </span>
-          <p className="journal-card-text">{trade}</p>
-        </div>
-      )}
-    </button>
+      <div className="journal-entry-body">
+        {market && (
+          <p className="journal-entry-block">
+            <span className="journal-entry-tag tone-market">
+              {t.journal.marketNoteTag}
+            </span>
+            <span className="journal-entry-text">{market}</span>
+          </p>
+        )}
+        {trade && (
+          <p className="journal-entry-block">
+            <span className="journal-entry-tag tone-trade">
+              {t.journal.tradeNoteTag}
+            </span>
+            <span className="journal-entry-text">{trade}</span>
+          </p>
+        )}
+      </div>
+    </li>
   );
 }
 
