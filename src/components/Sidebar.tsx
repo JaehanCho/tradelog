@@ -42,73 +42,82 @@ export function Sidebar() {
         <span className="sidebar-title">TradeLog</span>
       </div>
       <nav className="sidebar-nav">
-        {sections.map((s) => (
-          <div key={s.key} className="sidebar-section">
-            <button
-              className={`sidebar-link ${view === s.key ? "active" : ""}`}
-              onClick={() => setView(s.key)}
-            >
-              {s.label}
-            </button>
-            {s.key === "trading" && view === "trading" && (
-              <button
-                ref={triggerRef}
-                type="button"
-                className={`sidebar-month-trigger ${
-                  monthFilter ? "has-filter" : ""
-                } ${pickerAnchor ? "is-open" : ""}`}
-                onClick={togglePicker}
-                title={t.monthPicker.openLabel}
-                aria-haspopup="dialog"
-                aria-expanded={pickerAnchor ? "true" : "false"}
+        {sections.map((s) => {
+          const showChip = s.key === "trading" && view === "trading";
+          return (
+            <div key={s.key} className="sidebar-section">
+              <div
+                className={`sidebar-section-row ${
+                  showChip ? "has-chip" : ""
+                }`}
               >
-                <span className="sidebar-month-icon" aria-hidden="true">
-                  <svg viewBox="0 0 12 12" width="12" height="12">
-                    <rect
-                      x="1"
-                      y="2.5"
-                      width="10"
-                      height="8.5"
-                      rx="1.5"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1"
-                    />
-                    <line
-                      x1="1"
-                      y1="5"
-                      x2="11"
-                      y2="5"
-                      stroke="currentColor"
-                      strokeWidth="1"
-                    />
-                    <line
-                      x1="3.5"
-                      y1="1"
-                      x2="3.5"
-                      y2="3.5"
-                      stroke="currentColor"
-                      strokeWidth="1"
-                      strokeLinecap="round"
-                    />
-                    <line
-                      x1="8.5"
-                      y1="1"
-                      x2="8.5"
-                      y2="3.5"
-                      stroke="currentColor"
-                      strokeWidth="1"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </span>
-                <span className="sidebar-month-label">
-                  {monthFilter ?? t.sidebar.all}
-                </span>
-              </button>
-            )}
-          </div>
-        ))}
+                <button
+                  className={`sidebar-link ${view === s.key ? "active" : ""}`}
+                  onClick={() => setView(s.key)}
+                >
+                  {s.label}
+                </button>
+                {showChip && (
+                  <button
+                    ref={triggerRef}
+                    type="button"
+                    className={`sidebar-month-trigger ${
+                      monthFilter ? "has-filter" : ""
+                    } ${pickerAnchor ? "is-open" : ""}`}
+                    onClick={togglePicker}
+                    title={t.monthPicker.openLabel}
+                    aria-haspopup="dialog"
+                    aria-expanded={pickerAnchor ? "true" : "false"}
+                  >
+                    <span className="sidebar-month-icon" aria-hidden="true">
+                      <svg viewBox="0 0 12 12" width="12" height="12">
+                        <rect
+                          x="1"
+                          y="2.5"
+                          width="10"
+                          height="8.5"
+                          rx="1.5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1"
+                        />
+                        <line
+                          x1="1"
+                          y1="5"
+                          x2="11"
+                          y2="5"
+                          stroke="currentColor"
+                          strokeWidth="1"
+                        />
+                        <line
+                          x1="3.5"
+                          y1="1"
+                          x2="3.5"
+                          y2="3.5"
+                          stroke="currentColor"
+                          strokeWidth="1"
+                          strokeLinecap="round"
+                        />
+                        <line
+                          x1="8.5"
+                          y1="1"
+                          x2="8.5"
+                          y2="3.5"
+                          stroke="currentColor"
+                          strokeWidth="1"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </span>
+                    <span className="sidebar-month-label">
+                      {monthFilter ?? t.sidebar.all}
+                    </span>
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </nav>
       <div className="sidebar-footer">
         <LanguageToggle />

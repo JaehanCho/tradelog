@@ -6,6 +6,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import { createPortal } from "react-dom";
 import { useTradingDays } from "../hooks/useTradingDays";
 import { useT } from "../i18n";
 
@@ -142,7 +143,7 @@ export function MonthPickerPopover({ anchor, onClose }: Props) {
     };
   }, [focus, years, counts, monthFilter, setMonthFilter, onClose, anchor]);
 
-  return (
+  return createPortal(
     <div
       ref={containerRef}
       className="month-picker-popover"
@@ -223,6 +224,7 @@ export function MonthPickerPopover({ anchor, onClose }: Props) {
       <footer className="month-picker-footer">
         <span className="month-picker-hint">{t.monthPicker.hint}</span>
       </footer>
-    </div>
+    </div>,
+    document.body,
   );
 }

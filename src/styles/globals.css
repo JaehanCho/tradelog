@@ -987,36 +987,58 @@ button {
   gap: 1px;
 }
 
+.sidebar-section-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.sidebar-section-row > .sidebar-link {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
+.sidebar-section-row.has-chip > .sidebar-month-trigger {
+  flex: 0 0 auto;
+}
+
 .sidebar-month-trigger {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin: 2px 8px 6px 16px;
+  margin: 0;
   padding: 3px 8px;
   appearance: none;
-  background: rgba(127, 127, 127, 0.08);
-  border: 1px solid var(--separator);
+  background: rgba(0, 122, 255, 0.16);
+  border: 1px solid transparent;
   border-radius: 999px;
-  color: var(--text-secondary);
+  color: var(--accent);
   font: inherit;
   font-size: 11px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
-  align-self: flex-start;
+  align-self: center;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
 
 .sidebar-month-trigger:hover,
 .sidebar-month-trigger.is-open {
-  background: rgba(127, 127, 127, 0.16);
-  border-color: var(--separator-strong);
-  color: var(--text-primary);
+  background: rgba(0, 122, 255, 0.26);
 }
 
 .sidebar-month-trigger.has-filter {
-  background: rgba(0, 122, 255, 0.12);
-  border-color: rgba(0, 122, 255, 0.4);
-  color: var(--accent);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.sidebar-month-trigger.has-filter:hover,
+.sidebar-month-trigger.has-filter.is-open {
+  background: color-mix(in srgb, var(--accent) 88%, #000);
 }
 
 .sidebar-month-icon {

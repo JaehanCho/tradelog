@@ -47,8 +47,8 @@ export default function App() {
               <PnlCalendar />
               <MonthlyPnlBars />
             </section>
-            <JournalFeed />
             <TradingGrid />
+            <JournalFeed />
           </>
         )}
         {view === "defi" && <DefiBoard />}
