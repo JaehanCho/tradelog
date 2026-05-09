@@ -661,6 +661,39 @@ button {
   border-top: 1px solid var(--separator);
 }
 
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sidebar-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 2px 0 6px;
+}
+
+.sidebar-link-sub {
+  padding-left: 22px;
+  font-size: 12px;
+  position: relative;
+}
+
+.sidebar-link-sub::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 6px;
+  height: 1px;
+  background: var(--separator-strong);
+}
+
+.sidebar-empty-sub {
+  padding-left: 22px;
+}
+
 .sidebar-link {
   display: block;
   width: 100%;
@@ -996,6 +1029,151 @@ button {
   border-radius: var(--radius-md, 12px);
   text-align: center;
   color: var(--text-secondary);
+}
+
+/* ───── Journal feed (recent days with notes) ───────────────────── */
+
+.journal-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.journal-feed-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.journal-feed-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.journal-feed-toggle {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+.journal-feed-toggle:hover {
+  text-decoration: underline;
+}
+
+.journal-feed-empty {
+  padding: 20px 16px;
+  border: 1px dashed var(--separator);
+  border-radius: var(--radius-md, 12px);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.journal-feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.journal-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  font: inherit;
+  color: var(--text-primary);
+  background: var(--surface-elev);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-md, 12px);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.05s;
+}
+.journal-card:hover {
+  border-color: var(--accent);
+}
+.journal-card:active {
+  transform: translateY(1px);
+}
+
+.journal-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--separator);
+}
+
+.journal-card-date {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.journal-card-pnl {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.journal-card-pnl.tone-pos {
+  color: var(--positive);
+}
+.journal-card-pnl.tone-neg {
+  color: var(--negative);
+}
+.journal-card-pnl.tone-neutral {
+  color: var(--text-secondary);
+}
+.journal-card-pct {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.journal-card-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.journal-card-tag {
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(127, 127, 127, 0.14);
+  color: var(--text-secondary);
+}
+.journal-card-tag.tone-market {
+  background: rgba(0, 122, 255, 0.14);
+  color: var(--accent);
+}
+.journal-card-tag.tone-trade {
+  background: rgba(127, 127, 127, 0.14);
+  color: var(--text-secondary);
+}
+
+.journal-card-text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ───── Day detail drawer ───────────────────────────────────────── */

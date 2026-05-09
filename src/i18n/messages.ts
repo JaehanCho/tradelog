@@ -61,6 +61,14 @@ export type Messages = {
     sectorTrading: string;
     sectorDefi: string;
   };
+  journal: {
+    title: string;
+    empty: string;
+    tradeNoteTag: string;
+    marketNoteTag: string;
+    showAll: (n: number) => string;
+    showLess: string;
+  };
   wisdom: {
     title: string;
     newButton: string;
@@ -201,7 +209,7 @@ const ko: Messages = {
     sectionsLabel: "섹터",
     sectionTrading: "거래",
     sectionDefi: "DeFi",
-    sectionWisdom: "어록",
+    sectionWisdom: "팁",
   },
   drawer: {
     closeAria: "닫기",
@@ -254,18 +262,26 @@ const ko: Messages = {
     sectorTrading: "거래",
     sectorDefi: "DeFi",
   },
+  journal: {
+    title: "최근 일지",
+    empty: "메모가 있는 날이 아직 없어요. 행 우측 ▶ 버튼으로 그날의 시장 메모를 적어보세요.",
+    tradeNoteTag: "거래",
+    marketNoteTag: "시장",
+    showAll: (n) => `전체 ${n}개 보기`,
+    showLess: "접기",
+  },
   wisdom: {
-    title: "어록 / 꿀팁",
+    title: "트레이딩 팁",
     newButton: "+ 새로 추가",
     searchPlaceholder: "검색…",
     pinFilterLabel: "고정만 보기",
     allTags: "전체 태그",
     pinAria: "고정",
     deleteAria: "삭제",
-    drawerNew: "새 메모",
-    drawerEdit: "메모 편집",
+    drawerNew: "새 팁",
+    drawerEdit: "팁 편집",
     bodyLabel: "본문",
-    bodyPlaceholder: "어록, 꿀팁, 인사이트… 자유롭게 적어보세요.",
+    bodyPlaceholder: "꿀팁, 인사이트, 명언… 자유롭게 적어보세요.",
     sourceLabel: "출처",
     sourcePlaceholder: "예: Buffett, 책 제목, URL",
     tagsLabel: "태그",
@@ -273,9 +289,9 @@ const ko: Messages = {
     save: "저장",
     cancel: "취소",
     delete: "삭제",
-    deleteConfirm: "이 메모를 삭제할까요?",
-    emptyTitle: "아직 등록된 어록이 없어요",
-    emptyMsg: "+ 새로 추가 버튼을 눌러 첫 어록을 적어보세요. ⌘N 단축키도 됩니다.",
+    deleteConfirm: "이 팁을 삭제할까요?",
+    emptyTitle: "아직 등록된 팁이 없어요",
+    emptyMsg: "+ 새로 추가 버튼을 눌러 첫 팁을 적어보세요. ⌘N 단축키도 됩니다.",
     noMatches: "검색 결과가 없어요.",
   },
   grid: {
@@ -395,7 +411,7 @@ const en: Messages = {
     sectionsLabel: "Sections",
     sectionTrading: "Trading",
     sectionDefi: "DeFi",
-    sectionWisdom: "Wisdom",
+    sectionWisdom: "Tips",
   },
   drawer: {
     closeAria: "Close",
@@ -448,18 +464,26 @@ const en: Messages = {
     sectorTrading: "Trading",
     sectorDefi: "DeFi",
   },
+  journal: {
+    title: "Recent journal",
+    empty: "No notes yet. Click the ▶ on a row to capture today's market take.",
+    tradeNoteTag: "Trade",
+    marketNoteTag: "Market",
+    showAll: (n) => `Show all ${n}`,
+    showLess: "Show less",
+  },
   wisdom: {
-    title: "Wisdom",
+    title: "Trading Tips",
     newButton: "+ New",
     searchPlaceholder: "Search…",
     pinFilterLabel: "Pinned only",
     allTags: "All tags",
     pinAria: "Pin",
     deleteAria: "Delete",
-    drawerNew: "New note",
-    drawerEdit: "Edit note",
+    drawerNew: "New tip",
+    drawerEdit: "Edit tip",
     bodyLabel: "Body",
-    bodyPlaceholder: "A quote, a tip, a personal insight — write freely.",
+    bodyPlaceholder: "A tip, a quote, a personal insight — write freely.",
     sourceLabel: "Source",
     sourcePlaceholder: "e.g. Buffett, book title, URL",
     tagsLabel: "Tags",
@@ -467,9 +491,9 @@ const en: Messages = {
     save: "Save",
     cancel: "Cancel",
     delete: "Delete",
-    deleteConfirm: "Delete this note?",
-    emptyTitle: "No wisdom notes yet",
-    emptyMsg: "Press + New to add your first note. ⌘N also works.",
+    deleteConfirm: "Delete this tip?",
+    emptyTitle: "No tips yet",
+    emptyMsg: "Press + New to add your first tip. ⌘N also works.",
     noMatches: "No matches.",
   },
   grid: {

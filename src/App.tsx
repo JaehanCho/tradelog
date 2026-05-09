@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { DefiBoard } from "./components/DefiBoard";
 import { HeroSection } from "./components/HeroSection";
+import { JournalFeed } from "./components/JournalFeed";
 import { MonthlyStats } from "./components/MonthlyStats";
 import { PnlCalendar } from "./components/PnlCalendar";
 import { Sidebar } from "./components/Sidebar";
@@ -44,6 +45,7 @@ export default function App() {
               <MonthlyStats />
               <PnlCalendar />
             </section>
+            <JournalFeed />
             <TradingGrid />
           </>
         )}

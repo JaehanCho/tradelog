@@ -35,8 +35,11 @@ That's TradeLog.
 - **🍎 macOS-native** — Real Tauri 2 binary, vibrancy sidebar, system colors,
   proper dark mode. No Electron tax.
 - **📂 Multi-sector journal** — Sidebar tabs for **Trading**, **DeFi**, and
-  **Wisdom**. Total assets sum across sectors and live in the always-on hero
+  **Tips**. Total assets sum across sectors and live in the always-on hero
   card.
+- **🗓️ Recent journal feed** — A compact card grid above the trading grid
+  that surfaces only the days where a trade or market note exists, newest
+  first. Click a card to jump into the day detail drawer.
 - **📅 PnL calendar** — Binance-style heatmap. Green days, red days, see
   your month at a glance.
 - **📈 Equity curve** — Recharts-powered area chart with a goal reference
@@ -49,8 +52,8 @@ That's TradeLog.
 - **🌾 DeFi positions** — Track yield-farming / staking positions with
   protocol, principal, and periodic snapshots. Approximate APR is computed
   from the latest snapshot vs. principal.
-- **💡 Wisdom archive** — Save quotes, tips, and personal insights as cards
-  with tags, source, and pin support. Masonry layout, instant search,
+- **💡 Tips archive** — Save trading tips, quotes, and personal insights as
+  cards with tags, source, and pin support. Masonry layout, instant search,
   ⌘N for new, ⌘F to focus search.
 - **⌨️ Keyboard-first** — Click a cell, ⌘C/⌘V to copy and paste. ⌘⇧C/⌘⇧V
   copies and clones an entire row to the next free date. ⌘Z undoes anything.
@@ -90,8 +93,8 @@ the app relaunches into the new version.
 | **⌘Z** / **⌘⇧Z** | Undo / redo (50 steps) |
 | **Esc** (in drawer) | Close the drawer |
 | **⌘Enter** (in drawer textarea) | Save and keep editing |
-| **⌘N** (Wisdom view) | New wisdom note |
-| **⌘F** (Wisdom view) | Focus the search box |
+| **⌘N** (Tips view) | New tip |
+| **⌘F** (Tips view) | Focus the search box |
 | **Click a row's ✕** | Delete that day |
 | **Click a calendar month** | Filter the grid to that month |
 
@@ -101,15 +104,15 @@ the app relaunches into the new version.
 ┌──────────────┬──────────────────────────────────────────┐
 │  Sidebar     │  Hero: total assets (Trading + DeFi)    │
 │ ▸ Trading    │  + sector breakdown bar                  │
-│   DeFi       ├──────────────────────────────────────────┤
-│   Wisdom     │  Trading view:                            │
-│ ── Months ── │   Equity curve · monthly stats · grid    │
-│   All        │  DeFi view:                               │
-│   2026-05    │   Position cards (active · closed) +     │
-│   2026-04    │   per-position snapshot timeline          │
-│   ...        │  Wisdom view:                             │
-│ ── Footer ── │   Masonry cards · tags · search · ⌘N     │
-│ KO/EN  vX.Y  │                                            │
+│   ㄴ All     ├──────────────────────────────────────────┤
+│   ㄴ 2026-05 │  Trading view:                            │
+│   ㄴ 2026-04 │   Equity curve · monthly stats · cal.    │
+│   DeFi       │   Recent journal feed (notes only)       │
+│   Tips       │   Trading grid                            │
+│ ─ Footer ─── │  DeFi view:                               │
+│ KO/EN  vX.Y  │   Position cards + snapshot timeline     │
+│              │  Tips view:                               │
+│              │   Masonry cards · tags · search · ⌘N     │
 └──────────────┴──────────────────────────────────────────┘
 ```
 
@@ -191,8 +194,9 @@ locale can't drift out of sync silently.
 ## Roadmap
 
 - [x] DeFi / yield-farming sector with periodic snapshots
-- [x] Wisdom archive (quotes, tips, personal insights with tags)
+- [x] Tips archive (quotes, tips, personal insights with tags)
 - [x] Day detail drawer with separate market-note field
+- [x] Recent journal feed for at-a-glance review of recent notes
 - [ ] CSV / Excel export from the sidebar
 - [ ] Drawdown / max-equity overlay on the curve
 - [ ] Manual dark-mode toggle (system preference + override)

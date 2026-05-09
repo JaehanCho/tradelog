@@ -39,41 +39,40 @@ export function Sidebar() {
         <span className="sidebar-title">TradeLog</span>
       </div>
       <nav className="sidebar-nav">
-        <div className="sidebar-group">
-          <div className="sidebar-section-label">{t.sidebar.sectionsLabel}</div>
-          {sections.map((s) => (
+        {sections.map((s) => (
+          <div key={s.key} className="sidebar-section">
             <button
-              key={s.key}
               className={`sidebar-link ${view === s.key ? "active" : ""}`}
               onClick={() => setView(s.key)}
             >
               {s.label}
             </button>
-          ))}
-        </div>
-        {view === "trading" && (
-          <div className="sidebar-group sidebar-group-divider">
-            <div className="sidebar-section-label">{t.sidebar.monthLabel}</div>
-            <button
-              className={`sidebar-link ${monthFilter === null ? "active" : ""}`}
-              onClick={() => setMonthFilter(null)}
-            >
-              {t.sidebar.all}
-            </button>
-            {months.length === 0 && (
-              <div className="sidebar-empty">{t.sidebar.noData}</div>
+            {s.key === "trading" && view === "trading" && (
+              <div className="sidebar-sub">
+                <button
+                  className={`sidebar-link sidebar-link-sub ${monthFilter === null ? "active" : ""}`}
+                  onClick={() => setMonthFilter(null)}
+                >
+                  {t.sidebar.all}
+                </button>
+                {months.length === 0 && (
+                  <div className="sidebar-empty sidebar-empty-sub">
+                    {t.sidebar.noData}
+                  </div>
+                )}
+                {months.map((m) => (
+                  <button
+                    key={m}
+                    className={`sidebar-link sidebar-link-sub ${monthFilter === m ? "active" : ""}`}
+                    onClick={() => setMonthFilter(monthFilter === m ? null : m)}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
             )}
-            {months.map((m) => (
-              <button
-                key={m}
-                className={`sidebar-link ${monthFilter === m ? "active" : ""}`}
-                onClick={() => setMonthFilter(monthFilter === m ? null : m)}
-              >
-                {m}
-              </button>
-            ))}
           </div>
-        )}
+        ))}
       </nav>
       <div className="sidebar-footer">
         <LanguageToggle />
