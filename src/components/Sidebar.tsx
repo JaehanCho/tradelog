@@ -25,6 +25,7 @@ export function Sidebar() {
   const sections: Array<{ key: View; label: string }> = [
     { key: "trading", label: t.sidebar.sectionTrading },
     { key: "defi", label: t.sidebar.sectionDefi },
+    { key: "stocks", label: t.sidebar.sectionStocks },
     { key: "wisdom", label: t.sidebar.sectionWisdom },
   ];
 

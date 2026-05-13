@@ -10,6 +10,7 @@ export type Messages = {
     sectionsLabel: string;
     sectionTrading: string;
     sectionDefi: string;
+    sectionStocks: string;
     sectionWisdom: string;
   };
   drawer: {
@@ -92,6 +93,121 @@ export type Messages = {
     emptyTitle: string;
     emptyMsg: string;
     noMatches: string;
+  };
+  stocks: {
+    boardPlaceholder: string;
+    hero: {
+      totalAssets: string;
+      cumulativeProfit: string;
+      goal: string;
+      achievement: (pct: string) => string;
+      lastRefreshed: (rel: string) => string;
+      refresh: string;
+      fxRate: (rate: string) => string;
+      refreshFailed: string;
+      goalEdit: string;
+    };
+    holdings: {
+      title: string;
+      empty: string;
+      emptyMsg: string;
+      addCta: string;
+      col: {
+        ticker: string;
+        qty: string;
+        avgCost: string;
+        currentPrice: string;
+        marketValue: string;
+        pnl: string;
+        weight: string;
+      };
+      drawer: {
+        costBasis: string;
+        dayChange: string;
+        marketValue: string;
+        notes: string;
+        addNote: string;
+        moveToWatch: string;
+        delete: string;
+        edit: string;
+        deleteConfirm: string;
+      };
+      form: {
+        titleNew: string;
+        titleEdit: string;
+        symbol: string;
+        symbolHint: string;
+        market: string;
+        marketKospi: string;
+        marketKosdaq: string;
+        marketUs: string;
+        displayName: string;
+        displayNameHint: string;
+        qty: string;
+        avgCostUsd: string;
+        avgCostKrw: string;
+        save: string;
+        cancel: string;
+      };
+    };
+    watchlist: {
+      title: string;
+      empty: string;
+      addCta: string;
+      drawer: {
+        moveToHoldings: string;
+        delete: string;
+        deleteConfirm: string;
+      };
+      form: {
+        titleNew: string;
+        symbol: string;
+        market: string;
+        displayName: string;
+        save: string;
+        cancel: string;
+      };
+    };
+    notes: {
+      title: string;
+      empty: string;
+      emptyMsg: string;
+      addCta: string;
+      filterAll: string;
+      filterLabel: string;
+      moreToggle: string;
+      lessToggle: string;
+      deleteConfirm: string;
+      form: {
+        titleNew: string;
+        titleEdit: string;
+        ticker: string;
+        tickerPlaceholder: string;
+        date: string;
+        body: string;
+        bodyPlaceholder: string;
+        save: string;
+        cancel: string;
+        delete: string;
+      };
+    };
+    allocation: {
+      title: string;
+      totalCount: (n: number) => string;
+      other: string;
+    };
+    goal: {
+      title: string;
+      balanceLabel: string;
+      dateLabel: string;
+      save: string;
+      cancel: string;
+    };
+    markets: {
+      kospi: string;
+      kosdaq: string;
+      us: string;
+    };
   };
   grid: {
     headerDate: string;
@@ -223,6 +339,7 @@ const ko: Messages = {
     sectionsLabel: "섹터",
     sectionTrading: "거래",
     sectionDefi: "DeFi",
+    sectionStocks: "주식",
     sectionWisdom: "팁",
   },
   drawer: {
@@ -307,6 +424,121 @@ const ko: Messages = {
     emptyTitle: "아직 등록된 팁이 없어요",
     emptyMsg: "+ 새로 추가 버튼을 눌러 첫 팁을 적어보세요. ⌘N 단축키도 됩니다.",
     noMatches: "검색 결과가 없어요.",
+  },
+  stocks: {
+    boardPlaceholder: "주식 탭 — 구성 중이에요. 곧 보유·관심·메모가 채워집니다.",
+    hero: {
+      totalAssets: "총 자산",
+      cumulativeProfit: "누적 수익",
+      goal: "목표",
+      achievement: (pct) => `${pct}% 달성`,
+      lastRefreshed: (rel) => `마지막 갱신 ${rel}`,
+      refresh: "새로고침",
+      fxRate: (rate) => `₩${rate}/$`,
+      refreshFailed: "시세 갱신 실패 — 캐시된 값 사용 중",
+      goalEdit: "목표 편집",
+    },
+    holdings: {
+      title: "보유 종목",
+      empty: "아직 보유한 종목이 없어요",
+      emptyMsg: "+ 보유 추가로 첫 종목을 등록해보세요.",
+      addCta: "+ 보유 추가",
+      col: {
+        ticker: "종목",
+        qty: "수량",
+        avgCost: "평단",
+        currentPrice: "현재가",
+        marketValue: "평가금액",
+        pnl: "손익",
+        weight: "비중",
+      },
+      drawer: {
+        costBasis: "투자원금",
+        dayChange: "일간 변동",
+        marketValue: "평가금액",
+        notes: "메모",
+        addNote: "+ 메모 추가",
+        moveToWatch: "관심으로 이동",
+        delete: "삭제",
+        edit: "수정",
+        deleteConfirm: "이 보유 종목을 삭제할까요? 메모는 그대로 남습니다.",
+      },
+      form: {
+        titleNew: "보유 종목 추가",
+        titleEdit: "보유 종목 수정",
+        symbol: "종목 코드",
+        symbolHint: "예: AAPL, 005930",
+        market: "시장",
+        marketKospi: "KOSPI",
+        marketKosdaq: "KOSDAQ",
+        marketUs: "US",
+        displayName: "표시 이름",
+        displayNameHint: "비워두면 자동으로 채워져요",
+        qty: "수량",
+        avgCostUsd: "평단 (USD)",
+        avgCostKrw: "평단 (KRW)",
+        save: "저장",
+        cancel: "취소",
+      },
+    },
+    watchlist: {
+      title: "관심 종목",
+      empty: "아직 관심 종목이 없어요",
+      addCta: "+ 관심 추가",
+      drawer: {
+        moveToHoldings: "보유로 이동",
+        delete: "삭제",
+        deleteConfirm: "이 관심 종목을 삭제할까요?",
+      },
+      form: {
+        titleNew: "관심 종목 추가",
+        symbol: "종목 코드",
+        market: "시장",
+        displayName: "표시 이름",
+        save: "저장",
+        cancel: "취소",
+      },
+    },
+    notes: {
+      title: "종목 메모",
+      empty: "아직 작성된 메모가 없어요",
+      emptyMsg: "보유·관심 종목에 대한 생각을 자유롭게 적어보세요.",
+      addCta: "+ 메모 추가",
+      filterAll: "전체 종목",
+      filterLabel: "종목",
+      moreToggle: "더 보기",
+      lessToggle: "접기",
+      deleteConfirm: "이 메모를 삭제할까요?",
+      form: {
+        titleNew: "새 메모",
+        titleEdit: "메모 수정",
+        ticker: "종목",
+        tickerPlaceholder: "보유/관심 종목에서 선택",
+        date: "날짜",
+        body: "내용",
+        bodyPlaceholder: "이 종목에 대한 생각, 뉴스, 분석 등 자유롭게…",
+        save: "저장",
+        cancel: "취소",
+        delete: "삭제",
+      },
+    },
+    allocation: {
+      title: "비중",
+      totalCount: (n) => `총 ${n}개 종목`,
+      other: "기타",
+    },
+    goal: {
+      title: "주식 목표",
+      balanceLabel: "목표 자산 (USD)",
+      dateLabel: "목표 날짜 (선택)",
+      save: "저장",
+      cancel: "취소",
+    },
+    markets: {
+      kospi: "KOSPI",
+      kosdaq: "KOSDAQ",
+      us: "US",
+    },
   },
   grid: {
     headerDate: "날짜",
@@ -439,6 +671,7 @@ const en: Messages = {
     sectionsLabel: "Sections",
     sectionTrading: "Trading",
     sectionDefi: "DeFi",
+    sectionStocks: "Stocks",
     sectionWisdom: "Tips",
   },
   drawer: {
@@ -523,6 +756,122 @@ const en: Messages = {
     emptyTitle: "No tips yet",
     emptyMsg: "Press + New to add your first tip. ⌘N also works.",
     noMatches: "No matches.",
+  },
+  stocks: {
+    boardPlaceholder:
+      "Stocks tab — under construction. Holdings, watchlist, and notes will land soon.",
+    hero: {
+      totalAssets: "Total assets",
+      cumulativeProfit: "Cumulative profit",
+      goal: "Goal",
+      achievement: (pct) => `${pct}% reached`,
+      lastRefreshed: (rel) => `Last refreshed ${rel}`,
+      refresh: "Refresh",
+      fxRate: (rate) => `₩${rate}/$`,
+      refreshFailed: "Quote refresh failed — showing cached values",
+      goalEdit: "Edit goal",
+    },
+    holdings: {
+      title: "Holdings",
+      empty: "No holdings yet",
+      emptyMsg: "Press + Add holding to register your first ticker.",
+      addCta: "+ Add holding",
+      col: {
+        ticker: "Ticker",
+        qty: "Qty",
+        avgCost: "Avg cost",
+        currentPrice: "Current",
+        marketValue: "Market value",
+        pnl: "P&L",
+        weight: "Weight",
+      },
+      drawer: {
+        costBasis: "Cost basis",
+        dayChange: "Day change",
+        marketValue: "Market value",
+        notes: "Notes",
+        addNote: "+ Add note",
+        moveToWatch: "Move to watchlist",
+        delete: "Delete",
+        edit: "Edit",
+        deleteConfirm: "Delete this holding? Notes will remain.",
+      },
+      form: {
+        titleNew: "Add holding",
+        titleEdit: "Edit holding",
+        symbol: "Ticker",
+        symbolHint: "e.g. AAPL, 005930",
+        market: "Market",
+        marketKospi: "KOSPI",
+        marketKosdaq: "KOSDAQ",
+        marketUs: "US",
+        displayName: "Display name",
+        displayNameHint: "Leave blank to auto-fill",
+        qty: "Quantity",
+        avgCostUsd: "Avg cost (USD)",
+        avgCostKrw: "Avg cost (KRW)",
+        save: "Save",
+        cancel: "Cancel",
+      },
+    },
+    watchlist: {
+      title: "Watchlist",
+      empty: "Nothing on your watchlist yet",
+      addCta: "+ Add to watchlist",
+      drawer: {
+        moveToHoldings: "Move to holdings",
+        delete: "Delete",
+        deleteConfirm: "Remove from watchlist?",
+      },
+      form: {
+        titleNew: "Add to watchlist",
+        symbol: "Ticker",
+        market: "Market",
+        displayName: "Display name",
+        save: "Save",
+        cancel: "Cancel",
+      },
+    },
+    notes: {
+      title: "Ticker notes",
+      empty: "No notes yet",
+      emptyMsg: "Jot down thoughts about your holdings or watchlist.",
+      addCta: "+ Add note",
+      filterAll: "All tickers",
+      filterLabel: "Ticker",
+      moreToggle: "Show more",
+      lessToggle: "Show less",
+      deleteConfirm: "Delete this note?",
+      form: {
+        titleNew: "New note",
+        titleEdit: "Edit note",
+        ticker: "Ticker",
+        tickerPlaceholder: "Pick a ticker from holdings or watchlist",
+        date: "Date",
+        body: "Body",
+        bodyPlaceholder: "Thoughts, news, analysis about this ticker…",
+        save: "Save",
+        cancel: "Cancel",
+        delete: "Delete",
+      },
+    },
+    allocation: {
+      title: "Allocation",
+      totalCount: (n) => `${n} ticker${n === 1 ? "" : "s"}`,
+      other: "Other",
+    },
+    goal: {
+      title: "Stocks goal",
+      balanceLabel: "Target balance (USD)",
+      dateLabel: "Target date (optional)",
+      save: "Save",
+      cancel: "Cancel",
+    },
+    markets: {
+      kospi: "KOSPI",
+      kosdaq: "KOSDAQ",
+      us: "US",
+    },
   },
   grid: {
     headerDate: "Date",

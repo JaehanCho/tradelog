@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { api } from "../lib/api";
 
-export type View = "trading" | "defi" | "wisdom";
+export type View = "trading" | "defi" | "stocks" | "wisdom";
 
 interface ViewModeState {
   view: View;
@@ -11,7 +11,7 @@ interface ViewModeState {
 }
 
 const isView = (v: string | undefined): v is View =>
-  v === "trading" || v === "defi" || v === "wisdom";
+  v === "trading" || v === "defi" || v === "stocks" || v === "wisdom";
 
 export const useViewMode = create<ViewModeState>((set) => ({
   view: "trading",

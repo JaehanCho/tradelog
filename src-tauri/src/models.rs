@@ -75,3 +75,70 @@ pub struct WisdomNote {
     #[serde(default)]
     pub updated_at: Option<String>,
 }
+
+/// Long-position stock holding. PK is the (`symbol`, `market`) pair so
+/// the same ticker on different markets stays distinct. `avg_cost` is in
+/// the position's native currency (USD for `US`, KRW for `KR_*`).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StockHolding {
+    pub symbol: String,
+    pub market: String,
+    #[serde(default)]
+    pub display_name: String,
+    pub quantity: f64,
+    pub avg_cost: f64,
+    #[serde(default)]
+    pub created_at: Option<String>,
+    #[serde(default)]
+    pub updated_at: Option<String>,
+}
+
+/// A watched ticker (no position yet). Same PK as `StockHolding`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StockWatch {
+    pub symbol: String,
+    pub market: String,
+    #[serde(default)]
+    pub display_name: String,
+    #[serde(default)]
+    pub created_at: Option<String>,
+    #[serde(default)]
+    pub updated_at: Option<String>,
+}
+
+/// One entry in a per-ticker note timeline. `id` is `None` for new notes
+/// (autoincrement). Notes have no FK to holdings/watches — the history
+/// outlives the position.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StockNote {
+    #[serde(default)]
+    pub id: Option<i64>,
+    pub symbol: String,
+    pub market: String,
+    pub note_date: String,
+    pub body: String,
+    #[serde(default)]
+    pub created_at: Option<String>,
+    #[serde(default)]
+    pub updated_at: Option<String>,
+}
+
+/// Cached Yahoo Finance quote. `price` and `prev_close` are in native
+/// currency; the FX conversion happens in the UI.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StockQuote {
+    pub symbol: String,
+    pub market: String,
+    pub price: f64,
+    pub prev_close: Option<f64>,
+    pub currency: String,
+    pub fetched_at: String,
+}
+
+/// Cached FX rate, currently only `USDKRW` is used.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FxRate {
+    pub pair: String,
+    pub rate: f64,
+    pub fetched_at: String,
+}

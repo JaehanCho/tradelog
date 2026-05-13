@@ -2,6 +2,7 @@ mod commands;
 mod db;
 mod error;
 mod models;
+mod stock_quotes;
 
 use std::sync::Arc;
 
@@ -10,6 +11,7 @@ use tauri::Manager;
 
 use commands::*;
 use db::Db;
+use stock_quotes::refresh_stock_quotes;
 
 pub struct AppState {
     pub db: Arc<Mutex<Db>>,
@@ -48,6 +50,17 @@ pub fn run() {
             get_wisdom_notes,
             upsert_wisdom_note,
             delete_wisdom_note,
+            get_stock_holdings,
+            upsert_stock_holding,
+            delete_stock_holding,
+            get_stock_watches,
+            upsert_stock_watch,
+            delete_stock_watch,
+            get_stock_notes,
+            upsert_stock_note,
+            delete_stock_note,
+            get_stock_quotes,
+            refresh_stock_quotes,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

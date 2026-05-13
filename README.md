@@ -34,9 +34,9 @@ That's TradeLog.
 
 - **🍎 macOS-native** — Real Tauri 2 binary, vibrancy sidebar, system colors,
   proper dark mode. No Electron tax.
-- **📂 Multi-sector journal** — Sidebar tabs for **Trading**, **DeFi**, and
-  **Tips**. Total assets sum across sectors and live in the always-on hero
-  card.
+- **📂 Multi-sector journal** — Sidebar tabs for **Trading**, **DeFi**,
+  **Stocks**, and **Tips**. Total assets sum across sectors and live in the
+  always-on hero card.
 - **🗓️ Recent journal feed** — A vertical timeline above the trading grid
   that surfaces only the days where a trade or market note exists, newest
   first. Full note text is right there to read — the day-detail drawer is
@@ -56,6 +56,13 @@ That's TradeLog.
 - **🌾 DeFi positions** — Track yield-farming / staking positions with
   protocol, principal, and periodic snapshots. Approximate APR is computed
   from the latest snapshot vs. principal.
+- **📈 Stocks portfolio** — Long-position tracker (not trading-style). Each
+  ticker stores quantity + average cost in its native currency (USD or
+  KRW). Live prices auto-fetch on tab open via **Stooq** (US + USDKRW) and
+  **Naver Finance** (KOSPI/KOSDAQ), 5-minute cache so refresh stays well
+  under any rate limit. Cumulative P&L + goal progress in a dedicated
+  hero card, allocation donut (top 8 + others), watchlist pill rail, and
+  per-ticker memo timeline that survives buying/selling out.
 - **💡 Tips archive** — Save trading tips, quotes, and personal insights as
   cards with tags, source, and pin support. Masonry layout, instant search,
   ⌘N for new, ⌘F to focus search.
@@ -110,12 +117,15 @@ the app relaunches into the new version.
 │ ▸ Trading    │  + sector breakdown bar                  │
 │   📅 2026-05 ├──────────────────────────────────────────┤
 │   DeFi       │  Trading view:                            │
-│   Tips       │   Equity curve · monthly stats           │
-│              │   Calendar · monthly P&L bars             │
+│   Stocks     │   Equity curve · monthly stats           │
+│   Tips       │   Calendar · monthly P&L bars             │
 │              │   Journal timeline (notes only)          │
 │              │   Trading grid                            │
 │ ─ Footer ─── │  DeFi view:                               │
 │ KO/EN  vX.Y  │   Position cards + snapshot timeline     │
+│              │  Stocks view:                             │
+│              │   Hero · holdings table + allocation     │
+│              │   donut · watchlist pills · note feed    │
 │              │  Tips view:                               │
 │              │   Masonry cards · tags · search · ⌘N     │
 └──────────────┴──────────────────────────────────────────┘
@@ -168,7 +178,13 @@ pnpm tauri build   # produces .app + .dmg under src-tauri/target/...
                                                 │  app_setting,   │
                                                 │  defi_position, │
                                                 │  defi_snapshot, │
-                                                │  wisdom_note    │
+                                                │  wisdom_note,   │
+                                                │  stock_holding, │
+                                                │  stock_watch,   │
+                                                │  stock_note,    │
+                                                │  stock_quote_   │
+                                                │   cache, fx_    │
+                                                │   cache         │
                                                 └─────────────────┘
 ```
 
@@ -195,7 +211,9 @@ locale can't drift out of sync silently.
 - **Frontend:** React 18, TypeScript, Vite
 - **Storage:** SQLite via `rusqlite` (bundled), `rusqlite_migration`
 - **Grid:** `react-data-grid@7.0.0-beta.47` with custom cell editors
-- **Chart:** `recharts` (AreaChart + ReferenceLine)
+- **Chart:** `recharts` (AreaChart + ReferenceLine + PieChart for allocation)
+- **Live prices:** Stooq CSV (US tickers + USDKRW) + Naver Finance mobile
+  API (KOSPI / KOSDAQ) via `reqwest` from Rust, 5-min persisted cache
 - **State:** `zustand`
 - **Updates:** `tauri-plugin-updater` (minisign signature verification)
 - **Clipboard:** `tauri-plugin-clipboard-manager` (bypasses macOS paste prompt)
@@ -206,6 +224,10 @@ locale can't drift out of sync silently.
 - [x] Tips archive (quotes, tips, personal insights with tags)
 - [x] Day detail drawer with separate market-note field
 - [x] Recent journal feed for at-a-glance review of recent notes
+- [x] Stocks tab (long-position holdings + watchlist + memo timeline,
+      live prices via Stooq + Naver)
+- [ ] Stocks: dividend / passive-income tracking
+- [ ] Stocks: day-change for US tickers (needs a different free price feed)
 - [ ] CSV / Excel export from the sidebar
 - [ ] Drawdown / max-equity overlay on the curve
 - [ ] Manual dark-mode toggle (system preference + override)
@@ -214,7 +236,6 @@ locale can't drift out of sync silently.
 - [ ] Mood / discipline rating (1–5) with correlation against returns
 - [ ] Note search + date-range filter
 - [ ] Skip weekends / holidays in `+ next day`
-- [ ] Per-trade entry mode (ticker, side, PnL)
 - [ ] DeFi: optional price-API auto-sync for snapshots
 - [ ] Image attachments (clipboard paste) in notes & wisdom
 - [ ] Optional cloud sync (Cloudflare D1 / Supabase)

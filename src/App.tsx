@@ -6,12 +6,17 @@ import { MonthlyPnlBars } from "./components/MonthlyPnlBars";
 import { MonthlyStats } from "./components/MonthlyStats";
 import { PnlCalendar } from "./components/PnlCalendar";
 import { Sidebar } from "./components/Sidebar";
+import { StocksBoard } from "./components/StocksBoard";
 import { TradingGrid } from "./components/TradingGrid";
 import { UpdateNotification } from "./components/UpdateNotification";
 import { WisdomBoard } from "./components/WisdomBoard";
 import { useDefiPositions } from "./hooks/useDefiPositions";
-import { useTradingDays } from "./hooks/useTradingDays";
 import { useSettings } from "./hooks/useSettings";
+import { useStockHoldings } from "./hooks/useStockHoldings";
+import { useStockNotes } from "./hooks/useStockNotes";
+import { useStockQuotes } from "./hooks/useStockQuotes";
+import { useStockWatches } from "./hooks/useStockWatches";
+import { useTradingDays } from "./hooks/useTradingDays";
 import { useViewMode } from "./hooks/useViewMode";
 import { useWisdomNotes } from "./hooks/useWisdomNotes";
 import { useDocumentLang, useLocaleStore } from "./i18n";
@@ -23,6 +28,10 @@ export default function App() {
   const loadView = useViewMode((s) => s.load);
   const loadDefi = useDefiPositions((s) => s.load);
   const loadWisdom = useWisdomNotes((s) => s.load);
+  const loadStockHoldings = useStockHoldings((s) => s.load);
+  const loadStockWatches = useStockWatches((s) => s.load);
+  const loadStockNotes = useStockNotes((s) => s.load);
+  const loadStockQuotes = useStockQuotes((s) => s.load);
   const view = useViewMode((s) => s.view);
   useDocumentLang();
 
@@ -33,7 +42,22 @@ export default function App() {
     loadView();
     loadDefi();
     loadWisdom();
-  }, [load, loadSettings, loadLocale, loadView, loadDefi, loadWisdom]);
+    loadStockHoldings();
+    loadStockWatches();
+    loadStockNotes();
+    loadStockQuotes();
+  }, [
+    load,
+    loadSettings,
+    loadLocale,
+    loadView,
+    loadDefi,
+    loadWisdom,
+    loadStockHoldings,
+    loadStockWatches,
+    loadStockNotes,
+    loadStockQuotes,
+  ]);
 
   return (
     <div className="app-shell">
@@ -52,6 +76,7 @@ export default function App() {
           </>
         )}
         {view === "defi" && <DefiBoard />}
+        {view === "stocks" && <StocksBoard />}
         {view === "wisdom" && <WisdomBoard />}
       </main>
       <UpdateNotification />

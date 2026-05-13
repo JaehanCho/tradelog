@@ -1,7 +1,10 @@
 use tauri::State;
 
 use crate::error::AppResult;
-use crate::models::{DefiPosition, DefiSnapshot, TradingDay, WisdomNote};
+use crate::models::{
+    DefiPosition, DefiSnapshot, StockHolding, StockNote, StockQuote, StockWatch, TradingDay,
+    WisdomNote,
+};
 use crate::AppState;
 
 #[tauri::command]
@@ -143,4 +146,87 @@ pub fn upsert_wisdom_note(state: State<'_, AppState>, note: WisdomNote) -> AppRe
 pub fn delete_wisdom_note(state: State<'_, AppState>, id: String) -> AppResult<()> {
     let mut db = state.db.lock();
     db.delete_wisdom_note(&id)
+}
+
+// ─── Stocks: holdings ────────────────────────────────────────────────────
+
+#[tauri::command]
+pub fn get_stock_holdings(state: State<'_, AppState>) -> AppResult<Vec<StockHolding>> {
+    let db = state.db.lock();
+    db.get_stock_holdings()
+}
+
+#[tauri::command]
+pub fn upsert_stock_holding(
+    state: State<'_, AppState>,
+    holding: StockHolding,
+) -> AppResult<()> {
+    let mut db = state.db.lock();
+    db.upsert_stock_holding(&holding)
+}
+
+#[tauri::command]
+pub fn delete_stock_holding(
+    state: State<'_, AppState>,
+    symbol: String,
+    market: String,
+) -> AppResult<()> {
+    let mut db = state.db.lock();
+    db.delete_stock_holding(&symbol, &market)
+}
+
+// ─── Stocks: watchlist ───────────────────────────────────────────────────
+
+#[tauri::command]
+pub fn get_stock_watches(state: State<'_, AppState>) -> AppResult<Vec<StockWatch>> {
+    let db = state.db.lock();
+    db.get_stock_watches()
+}
+
+#[tauri::command]
+pub fn upsert_stock_watch(state: State<'_, AppState>, watch: StockWatch) -> AppResult<()> {
+    let mut db = state.db.lock();
+    db.upsert_stock_watch(&watch)
+}
+
+#[tauri::command]
+pub fn delete_stock_watch(
+    state: State<'_, AppState>,
+    symbol: String,
+    market: String,
+) -> AppResult<()> {
+    let mut db = state.db.lock();
+    db.delete_stock_watch(&symbol, &market)
+}
+
+// ─── Stocks: per-ticker note timeline ────────────────────────────────────
+
+#[tauri::command]
+pub fn get_stock_notes(
+    state: State<'_, AppState>,
+    symbol: Option<String>,
+    market: Option<String>,
+) -> AppResult<Vec<StockNote>> {
+    let db = state.db.lock();
+    db.get_stock_notes(symbol.as_deref(), market.as_deref())
+}
+
+#[tauri::command]
+pub fn upsert_stock_note(state: State<'_, AppState>, note: StockNote) -> AppResult<i64> {
+    let mut db = state.db.lock();
+    db.upsert_stock_note(&note)
+}
+
+#[tauri::command]
+pub fn delete_stock_note(state: State<'_, AppState>, id: i64) -> AppResult<()> {
+    let mut db = state.db.lock();
+    db.delete_stock_note(id)
+}
+
+// ─── Stocks: quote cache (read-only from front-end; refresh added in Phase 5) ──
+
+#[tauri::command]
+pub fn get_stock_quotes(state: State<'_, AppState>) -> AppResult<Vec<StockQuote>> {
+    let db = state.db.lock();
+    db.get_stock_quotes()
 }

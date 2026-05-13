@@ -5,13 +5,17 @@ use rusqlite_migration::{Migrations, M};
 use tauri::Manager;
 
 use crate::error::{AppError, AppResult};
-use crate::models::{DefiPosition, DefiSnapshot, TradingDay, WisdomNote};
+use crate::models::{
+    DefiPosition, DefiSnapshot, FxRate, StockHolding, StockNote, StockQuote, StockWatch,
+    TradingDay, WisdomNote,
+};
 
 const MIGRATION_0001: &str = include_str!("../migrations/0001_initial.sql");
 const MIGRATION_0002: &str = include_str!("../migrations/0002_settings.sql");
 const MIGRATION_0003: &str = include_str!("../migrations/0003_market_note.sql");
 const MIGRATION_0004: &str = include_str!("../migrations/0004_defi.sql");
 const MIGRATION_0005: &str = include_str!("../migrations/0005_wisdom.sql");
+const MIGRATION_0006: &str = include_str!("../migrations/0006_stocks.sql");
 
 pub struct Db {
     conn: Connection,
@@ -35,6 +39,7 @@ impl Db {
             M::up(MIGRATION_0003),
             M::up(MIGRATION_0004),
             M::up(MIGRATION_0005),
+            M::up(MIGRATION_0006),
         ]);
         migrations.to_latest(&mut conn)?;
 
@@ -334,6 +339,200 @@ impl Db {
         tx.commit()?;
         Ok(())
     }
+
+    // ─── Stock holdings ────────────────────────────────────────────
+
+    pub fn get_stock_holdings(&self) -> AppResult<Vec<StockHolding>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT symbol, market, display_name, quantity, avg_cost, created_at, updated_at \
+             FROM stock_holding ORDER BY symbol ASC",
+        )?;
+        let rows = stmt
+            .query_map([], row_to_stock_holding)?
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(rows)
+    }
+
+    pub fn upsert_stock_holding(&mut self, h: &StockHolding) -> AppResult<()> {
+        self.conn.execute(
+            "INSERT INTO stock_holding (symbol, market, display_name, quantity, avg_cost, updated_at) \
+             VALUES (?1, ?2, ?3, ?4, ?5, strftime('%Y-%m-%dT%H:%M:%fZ','now')) \
+             ON CONFLICT(symbol, market) DO UPDATE SET \
+                 display_name = excluded.display_name, \
+                 quantity = excluded.quantity, \
+                 avg_cost = excluded.avg_cost, \
+                 updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')",
+            params![h.symbol, h.market, h.display_name, h.quantity, h.avg_cost],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_stock_holding(&mut self, symbol: &str, market: &str) -> AppResult<()> {
+        self.conn.execute(
+            "DELETE FROM stock_holding WHERE symbol = ?1 AND market = ?2",
+            params![symbol, market],
+        )?;
+        Ok(())
+    }
+
+    // ─── Stock watches ─────────────────────────────────────────────
+
+    pub fn get_stock_watches(&self) -> AppResult<Vec<StockWatch>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT symbol, market, display_name, created_at, updated_at \
+             FROM stock_watch ORDER BY symbol ASC",
+        )?;
+        let rows = stmt
+            .query_map([], row_to_stock_watch)?
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(rows)
+    }
+
+    pub fn upsert_stock_watch(&mut self, w: &StockWatch) -> AppResult<()> {
+        self.conn.execute(
+            "INSERT INTO stock_watch (symbol, market, display_name, updated_at) \
+             VALUES (?1, ?2, ?3, strftime('%Y-%m-%dT%H:%M:%fZ','now')) \
+             ON CONFLICT(symbol, market) DO UPDATE SET \
+                 display_name = excluded.display_name, \
+                 updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')",
+            params![w.symbol, w.market, w.display_name],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_stock_watch(&mut self, symbol: &str, market: &str) -> AppResult<()> {
+        self.conn.execute(
+            "DELETE FROM stock_watch WHERE symbol = ?1 AND market = ?2",
+            params![symbol, market],
+        )?;
+        Ok(())
+    }
+
+    // ─── Stock notes ───────────────────────────────────────────────
+
+    pub fn get_stock_notes(
+        &self,
+        symbol: Option<&str>,
+        market: Option<&str>,
+    ) -> AppResult<Vec<StockNote>> {
+        if let (Some(s), Some(m)) = (symbol, market) {
+            let mut stmt = self.conn.prepare(
+                "SELECT id, symbol, market, note_date, body, created_at, updated_at \
+                 FROM stock_note WHERE symbol = ?1 AND market = ?2 \
+                 ORDER BY note_date DESC, id DESC",
+            )?;
+            let rows = stmt
+                .query_map(params![s, m], row_to_stock_note)?
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(rows)
+        } else {
+            let mut stmt = self.conn.prepare(
+                "SELECT id, symbol, market, note_date, body, created_at, updated_at \
+                 FROM stock_note ORDER BY note_date DESC, id DESC",
+            )?;
+            let rows = stmt
+                .query_map([], row_to_stock_note)?
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(rows)
+        }
+    }
+
+    pub fn upsert_stock_note(&mut self, n: &StockNote) -> AppResult<i64> {
+        if let Some(id) = n.id {
+            self.conn.execute(
+                "UPDATE stock_note SET \
+                     symbol = ?2, market = ?3, note_date = ?4, body = ?5, \
+                     updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') \
+                 WHERE id = ?1",
+                params![id, n.symbol, n.market, n.note_date, n.body],
+            )?;
+            Ok(id)
+        } else {
+            self.conn.execute(
+                "INSERT INTO stock_note (symbol, market, note_date, body) \
+                 VALUES (?1, ?2, ?3, ?4)",
+                params![n.symbol, n.market, n.note_date, n.body],
+            )?;
+            Ok(self.conn.last_insert_rowid())
+        }
+    }
+
+    pub fn delete_stock_note(&mut self, id: i64) -> AppResult<()> {
+        self.conn
+            .execute("DELETE FROM stock_note WHERE id = ?1", params![id])?;
+        Ok(())
+    }
+
+    // ─── Stock quote cache ─────────────────────────────────────────
+
+    pub fn get_stock_quotes(&self) -> AppResult<Vec<StockQuote>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT symbol, market, price, prev_close, currency, fetched_at \
+             FROM stock_quote_cache",
+        )?;
+        let rows = stmt
+            .query_map([], row_to_stock_quote)?
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(rows)
+    }
+
+    /// Bulk upsert quotes in a single transaction. Called after a Yahoo
+    /// batch fetch completes (Phase 5).
+    pub fn upsert_stock_quotes(&mut self, quotes: &[StockQuote]) -> AppResult<()> {
+        let tx = self.conn.transaction()?;
+        {
+            let mut stmt = tx.prepare(
+                "INSERT INTO stock_quote_cache (symbol, market, price, prev_close, currency, fetched_at) \
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6) \
+                 ON CONFLICT(symbol, market) DO UPDATE SET \
+                     price = excluded.price, \
+                     prev_close = excluded.prev_close, \
+                     currency = excluded.currency, \
+                     fetched_at = excluded.fetched_at",
+            )?;
+            for q in quotes {
+                stmt.execute(params![
+                    q.symbol,
+                    q.market,
+                    q.price,
+                    q.prev_close,
+                    q.currency,
+                    q.fetched_at,
+                ])?;
+            }
+        }
+        tx.commit()?;
+        Ok(())
+    }
+
+    // ─── FX cache ──────────────────────────────────────────────────
+
+    pub fn get_fx_rate(&self, pair: &str) -> AppResult<Option<FxRate>> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT pair, rate, fetched_at FROM fx_cache WHERE pair = ?1")?;
+        let mut rows = stmt.query(params![pair])?;
+        if let Some(row) = rows.next()? {
+            Ok(Some(FxRate {
+                pair: row.get(0)?,
+                rate: row.get(1)?,
+                fetched_at: row.get(2)?,
+            }))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn upsert_fx_rate(&mut self, r: &FxRate) -> AppResult<()> {
+        self.conn.execute(
+            "INSERT INTO fx_cache (pair, rate, fetched_at) VALUES (?1, ?2, ?3) \
+             ON CONFLICT(pair) DO UPDATE SET \
+                 rate = excluded.rate, \
+                 fetched_at = excluded.fetched_at",
+            params![r.pair, r.rate, r.fetched_at],
+        )?;
+        Ok(())
+    }
 }
 
 fn row_to_defi_position(row: &rusqlite::Row<'_>) -> rusqlite::Result<DefiPosition> {
@@ -385,5 +584,50 @@ fn row_to_trading_day(row: &rusqlite::Row<'_>) -> rusqlite::Result<TradingDay> {
         market_note: row.get(5)?,
         created_at: row.get(6)?,
         updated_at: row.get(7)?,
+    })
+}
+
+fn row_to_stock_holding(row: &rusqlite::Row<'_>) -> rusqlite::Result<StockHolding> {
+    Ok(StockHolding {
+        symbol: row.get(0)?,
+        market: row.get(1)?,
+        display_name: row.get(2)?,
+        quantity: row.get(3)?,
+        avg_cost: row.get(4)?,
+        created_at: row.get(5)?,
+        updated_at: row.get(6)?,
+    })
+}
+
+fn row_to_stock_watch(row: &rusqlite::Row<'_>) -> rusqlite::Result<StockWatch> {
+    Ok(StockWatch {
+        symbol: row.get(0)?,
+        market: row.get(1)?,
+        display_name: row.get(2)?,
+        created_at: row.get(3)?,
+        updated_at: row.get(4)?,
+    })
+}
+
+fn row_to_stock_note(row: &rusqlite::Row<'_>) -> rusqlite::Result<StockNote> {
+    Ok(StockNote {
+        id: row.get(0)?,
+        symbol: row.get(1)?,
+        market: row.get(2)?,
+        note_date: row.get(3)?,
+        body: row.get(4)?,
+        created_at: row.get(5)?,
+        updated_at: row.get(6)?,
+    })
+}
+
+fn row_to_stock_quote(row: &rusqlite::Row<'_>) -> rusqlite::Result<StockQuote> {
+    Ok(StockQuote {
+        symbol: row.get(0)?,
+        market: row.get(1)?,
+        price: row.get(2)?,
+        prev_close: row.get(3)?,
+        currency: row.get(4)?,
+        fetched_at: row.get(5)?,
     })
 }
