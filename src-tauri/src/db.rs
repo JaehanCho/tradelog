@@ -1,4 +1,5 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use rusqlite::{params, Connection};
 use rusqlite_migration::{Migrations, M};
@@ -17,6 +18,30 @@ const MIGRATION_0004: &str = include_str!("../migrations/0004_defi.sql");
 const MIGRATION_0005: &str = include_str!("../migrations/0005_wisdom.sql");
 const MIGRATION_0006: &str = include_str!("../migrations/0006_stocks.sql");
 
+/// `PRAGMA user_version` after all `migrations()` apply. Bump in lock-step
+/// with each new migration added below. Used to decide whether a launch
+/// needs a pre-migration snapshot, and to log a useful message when an
+/// older binary sees a too-new DB.
+const LATEST_SCHEMA_VERSION: u32 = 6;
+
+/// Keep this many `db.sqlite.pre-migration-*.bak` files. Snapshots are
+/// tiny (a few hundred KB each) so retention is cheap; the point is
+/// being able to roll back if a future release ships a bad migration.
+const SNAPSHOT_RETENTION: usize = 5;
+
+/// All migrations in order. Exposed so integration tests can apply
+/// them against a fresh DB without booting the Tauri runtime.
+pub fn migrations() -> Migrations<'static> {
+    Migrations::new(vec![
+        M::up(MIGRATION_0001),
+        M::up(MIGRATION_0002),
+        M::up(MIGRATION_0003),
+        M::up(MIGRATION_0004),
+        M::up(MIGRATION_0005),
+        M::up(MIGRATION_0006),
+    ])
+}
+
 pub struct Db {
     conn: Connection,
 }
@@ -29,19 +54,42 @@ impl Db {
             .map_err(|e| AppError::Other(format!("app_data_dir: {e}")))?;
         std::fs::create_dir_all(&dir)?;
         let path: PathBuf = dir.join("db.sqlite");
+
+        // Take a defensive snapshot if the DB's `user_version` differs from
+        // what this build expects — either we're about to migrate forward
+        // (5 → 6) or the DB has gone _ahead_ of us (a partial auto-update,
+        // a broken downgrade, etc.). Best-effort: don't fail launch if the
+        // snapshot itself can't be written.
+        if path.exists() {
+            if let Ok(v) = read_user_version(&path) {
+                if v != LATEST_SCHEMA_VERSION {
+                    if let Err(e) = snapshot_db(&dir, &path) {
+                        eprintln!("[tradelog] pre-migration snapshot failed: {e}");
+                    }
+                }
+            }
+        }
+
         let mut conn = Connection::open(&path)?;
         conn.pragma_update(None, "journal_mode", "WAL")?;
         conn.pragma_update(None, "foreign_keys", "ON")?;
 
-        let migrations = Migrations::new(vec![
-            M::up(MIGRATION_0001),
-            M::up(MIGRATION_0002),
-            M::up(MIGRATION_0003),
-            M::up(MIGRATION_0004),
-            M::up(MIGRATION_0005),
-            M::up(MIGRATION_0006),
-        ]);
-        migrations.to_latest(&mut conn)?;
+        if let Err(e) = migrations().to_latest(&mut conn) {
+            let observed: u32 = conn
+                .query_row("PRAGMA user_version", [], |r| r.get(0))
+                .unwrap_or(0);
+            eprintln!("[tradelog] FATAL: migration failed: {e}");
+            eprintln!("[tradelog] db path: {}", path.display());
+            eprintln!(
+                "[tradelog] db user_version = {observed}, this build expects {LATEST_SCHEMA_VERSION}"
+            );
+            eprintln!(
+                "[tradelog] recovery: cp '{}/db.sqlite.pre-migration-<TS>.bak' '{}'",
+                dir.display(),
+                path.display()
+            );
+            return Err(AppError::Migration(e));
+        }
 
         Ok(Self { conn })
     }
@@ -630,4 +678,115 @@ fn row_to_stock_quote(row: &rusqlite::Row<'_>) -> rusqlite::Result<StockQuote> {
         currency: row.get(4)?,
         fetched_at: row.get(5)?,
     })
+}
+
+fn read_user_version(path: &Path) -> AppResult<u32> {
+    let conn = Connection::open(path)?;
+    let v: u32 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
+    Ok(v)
+}
+
+/// Snapshot `db.sqlite` into a timestamped `.pre-migration-<TS>.bak` file
+/// in the same directory, then prune to `SNAPSHOT_RETENTION` newest copies.
+/// Uses SQLite's online backup API so the WAL is handled correctly.
+fn snapshot_db(dir: &Path, db_path: &Path) -> AppResult<PathBuf> {
+    let ts = chrono::Utc::now().format("%Y%m%d-%H%M%S").to_string();
+    let snap_path = dir.join(format!("db.sqlite.pre-migration-{ts}.bak"));
+
+    let src = Connection::open(db_path)?;
+    let mut dst = Connection::open(&snap_path)?;
+    let backup = rusqlite::backup::Backup::new(&src, &mut dst)?;
+    backup.run_to_completion(100, Duration::ZERO, None)?;
+
+    prune_snapshots(dir, SNAPSHOT_RETENTION);
+    Ok(snap_path)
+}
+
+fn prune_snapshots(dir: &Path, keep: usize) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    let mut snaps: Vec<_> = entries
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            e.file_name()
+                .to_string_lossy()
+                .starts_with("db.sqlite.pre-migration-")
+        })
+        .collect();
+    snaps.sort_by_key(|e| {
+        e.metadata()
+            .and_then(|m| m.modified())
+            .unwrap_or(std::time::SystemTime::UNIX_EPOCH)
+    });
+    if snaps.len() > keep {
+        for old in &snaps[..snaps.len() - keep] {
+            let _ = std::fs::remove_file(old.path());
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Catches "binary panics on startup with a fresh DB" — the failure
+    /// mode that hit v0.3.5 → v0.4.0 users. `cargo test` runs this on
+    /// every CI build, so a broken migration can't slip through.
+    #[test]
+    fn migrations_apply_cleanly_to_fresh_db() {
+        let tmp = tempfile::Builder::new()
+            .prefix("tradelog-test-")
+            .suffix(".sqlite")
+            .tempfile()
+            .expect("tempfile");
+        let mut conn = Connection::open(tmp.path()).expect("open");
+        conn.pragma_update(None, "foreign_keys", "ON").unwrap();
+        migrations()
+            .to_latest(&mut conn)
+            .expect("migrations should apply cleanly to a fresh DB");
+        let v: u32 = conn
+            .query_row("PRAGMA user_version", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(v, LATEST_SCHEMA_VERSION);
+
+        // Sanity: tables from each migration exist.
+        for table in &[
+            "trading_day",
+            "app_setting",
+            "defi_position",
+            "defi_snapshot",
+            "wisdom_note",
+            "stock_holding",
+            "stock_watch",
+            "stock_note",
+            "stock_quote_cache",
+            "fx_cache",
+        ] {
+            let count: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?1",
+                    params![table],
+                    |r| r.get(0),
+                )
+                .unwrap();
+            assert_eq!(count, 1, "table {table} should exist");
+        }
+    }
+
+    /// Running migrations a second time must be a no-op — guards against
+    /// non-idempotent migration SQL (e.g. missing `IF NOT EXISTS`).
+    #[test]
+    fn migrations_are_idempotent() {
+        let tmp = tempfile::Builder::new()
+            .prefix("tradelog-test-")
+            .suffix(".sqlite")
+            .tempfile()
+            .expect("tempfile");
+        let mut conn = Connection::open(tmp.path()).unwrap();
+        migrations().to_latest(&mut conn).unwrap();
+        migrations()
+            .to_latest(&mut conn)
+            .expect("re-running migrations should be a no-op");
+    }
 }

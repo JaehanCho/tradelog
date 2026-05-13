@@ -178,3 +178,54 @@ on every release — but absolutely should not happen on every commit.
 GH Actions secrets (signing key, etc.) are already provisioned. The
 release flow above is the full procedure — no extra steps once the
 version commit and tag are pushed.
+
+## Pre-release verification (mandatory before tagging)
+
+Background: v0.3.5 → v0.4.0 shipped after `cargo check`, `tsc -b`,
+`cargo test`, and Vite/Chrome visual checks all passed — yet the
+update half-installed and left users on a binary that panicked with
+`MigrationDefinition(DatabaseTooFarAhead)`. **Those checks don't
+exercise the packaged binary's startup path.** Don't trust them as
+proof a release is shippable.
+
+Before pushing a `vX.Y.Z` tag:
+
+1. **Build the actual package locally** (not just `cargo check`):
+   ```sh
+   pnpm tauri build
+   ```
+
+2. **Launch the built `.app` once** and confirm it doesn't crash on
+   startup. The Tauri setup hook runs DB migrations there — that's
+   exactly the failure mode that `cargo check` misses.
+   ```sh
+   open src-tauri/target/universal-apple-darwin/release/bundle/macos/TradeLog.app
+   # then quit it after the window appears
+   ```
+
+3. **Click the feature that the release adds.** Stocks tab, new
+   modal, whatever. If you can't reach the new UI without crashing,
+   the release isn't ready.
+
+4. **Test the upgrade path** when the release changes the DB schema:
+   - Backup `~/Library/Application Support/com.tradelog.app/db.sqlite`
+   - Open the previous installed `.app` once to make sure your real
+     DB is at the OLD schema version
+   - Quit, install the new build, launch it — the new build should
+     migrate cleanly and not crash on next launch of the same `.app`.
+
+CI also runs these guards (in `release.yml`):
+- `cargo test --locked` — catches migration regressions via the
+  `migrations_apply_cleanly_to_fresh_db` and `migrations_are_idempotent`
+  tests in `src-tauri/src/db.rs`
+- `pnpm test` — JS unit tests
+- **Packaged-binary smoke test** — launches the built `.app` headlessly
+  for 5 seconds; if it exits early, the draft release is auto-deleted
+  so the tag can be re-pushed after a fix
+
+If you add a new migration: it MUST be additive (`CREATE TABLE IF NOT
+EXISTS`, `INSERT OR IGNORE`) and bump `LATEST_SCHEMA_VERSION` in
+`src-tauri/src/db.rs`. The `Db::open` snapshots `db.sqlite` to
+`db.sqlite.pre-migration-<TS>.bak` (kept 5 deep) whenever it sees a
+schema-version mismatch — that's the user's recovery escape hatch if
+auto-update half-fails again.

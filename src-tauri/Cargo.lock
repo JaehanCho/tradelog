@@ -4401,7 +4401,7 @@ dependencies = [
 
 [[package]]
 name = "tradelog"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "chrono",
  "futures",
@@ -4417,6 +4417,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-process",
  "tauri-plugin-updater",
+ "tempfile",
  "thiserror 1.0.69",
  "tokio",
 ]

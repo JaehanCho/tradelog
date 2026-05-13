@@ -40,6 +40,18 @@ jobs:
       - name: Install JS deps
         run: pnpm install --frozen-lockfile
 
+      # Pre-build gate: catches migration regressions and unit-level bugs
+      # before we spend 10 minutes on a build that's destined to crash.
+      # The migration tests in db.rs were added after v0.3.5 → v0.4.0
+      # users hit a `DatabaseTooFarAhead` panic on auto-update; this step
+      # is what would have caught a broken migration before release.
+      - name: Run Rust unit tests
+        working-directory: src-tauri
+        run: cargo test --locked
+
+      - name: Run JS unit tests
+        run: pnpm test
+
       - name: Build, sign and release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -58,3 +70,39 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+      # Smoke test: launch the actual packaged binary and confirm the
+      # Tauri setup hook (including DB migrations) doesn't panic. This is
+      # the safety net that `cargo check` / `tsc -b` can't provide — it
+      # exercises the real release binary.
+      - name: Smoke-test packaged binary
+        run: |
+          set -e
+          APP=$(find src-tauri/target -type d -name "TradeLog.app" -path "*release/bundle/macos/*" | head -1)
+          if [ -z "$APP" ]; then
+            echo "::error::Built TradeLog.app not found under src-tauri/target"
+            exit 1
+          fi
+          BIN="$APP/Contents/MacOS/tradelog"
+          echo "Launching $BIN ..."
+          "$BIN" > /tmp/tradelog-smoke.log 2>&1 &
+          PID=$!
+          sleep 5
+          if kill -0 $PID 2>/dev/null; then
+            echo "::notice::Smoke test passed — app alive after 5s"
+            kill $PID 2>/dev/null || true
+            wait $PID 2>/dev/null || true
+          else
+            echo "::error::Smoke test failed — app exited within 5s"
+            cat /tmp/tradelog-smoke.log
+            exit 1
+          fi
+
+      # If anything above failed (build, tests, or smoke test) and the
+      # draft release was created, delete it so a re-tag can re-run cleanly.
+      - name: Cleanup draft release on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete ${{ github.ref_name }} --yes 2>/dev/null || true
